@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset='utf-8' />
+<link rel="stylesheet" href="css/style.css">
+<link href='../packages/core/main.css' rel='stylesheet' />
+<link href='../packages/daygrid/main.css' rel='stylesheet' />
+<link href='../packages/timegrid/main.css' rel='stylesheet' />
+<link href='../packages/list/main.css' rel='stylesheet' />
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+<script src='../packages/core/main.js'></script>
+<script src='../packages/interaction/main.js'></script>
+<script src='../packages/daygrid/main.js'></script>
+<script src='../packages/timegrid/main.js'></script>
+<script src='../packages/list/main.js'></script>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+<script src="js/script.js"></script>
+</head>
+<body>
+
+  <div id='eventClicked' style="display:none"></div>  
+  <div id='eventReceive' style='display: none'></div>
+
+  <!-- -------- Evenements Exterieur ---------- -->
+  <div id='external-events'>
+    <div id='external-events-list'>
+      <div class='fc-event evenement' id="present"><p>Présent</p></div>
+      <div class='fc-event evenement' id="demandeConge"><p>Demande de Congé</p></div>
+      <div class='fc-event evenement' id="conge"><p>Congé</p></div>
+      <div class='fc-event evenement' id="absence"><p>Absence</p></div>
+      <div class='fc-event evenement' id="arret"><p>Arrêt</p></div>
+      <div class='fc-event evenement' id="teletravail"><p>Télétravail</p></div>
+      <div class='fc-event evenement' id="formation"><p>Formation</p></div>
+      <div class='fc-event evenement' id="ferie_WE"><p>Férié / WE</p></div>
+    </div>
+  </div>
+
+  <div id='wrap'>
+     <!-- -------- Modal 1 : Demande de Congé ---------- --> 
+    <div class="modal fade" id="modalDemandeConge" tabindex="-1" role="dialog" aria-labelledby="modalCongeLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalCongeLabel">Ajouter un Congé</h5>
+            <button type="button" class="close" data-dismiss="modal" onclick="cancelDemandeConge($('#eventReceive').val())">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- -------- Formulaire Congé ---------- -->
+            <form id='form-demandeConge'>
+              
+              <div class="form-group row">
+                <label for="typeConge" class="col-sm-4">Type de congés</label>
+                <div class="col-sm-8">
+                    <select class="custom-select" id="typeConge">
+                      <option selected>Congé Payé</option>
+                      <option value="1">Exceptionnel</option>
+                      <option value="2">Congé Maternité/Paternité</option>
+                    </select>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="dateDebut">Date de début</label>
+                    <input type="date" class="form-control" id="dateDebut">
+                </div>
+                <div class="col-sm-6">
+                    <label for="dateFin">Date de fin</label>
+                    <input type="date" class="form-control" id="dateFin">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <div class="col-sm-6">
+                  <label for="heureDebut">Heure de début</label>
+                  <select class="custom-select" id="heureDebut">
+                    <option selected>Matin</option>
+                    <option value="1">Soir</option>
+                  </select>
+                </div>
+                <div class="col-sm-6">
+                  <label for="heureFin">Heure de fin</label>              
+                  <select class="custom-select" id="heureFin">
+                    <option selected>Soir</option>
+                    <option value="1">Matin</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="nbJours" class="col-sm-4">Nombre de jours</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" id="nbJours">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="commentaire" class="col-sm-4">Commentaires</label>
+                <div class="col-sm-8">
+                  <textarea class="form-control" id="commentaire" rows="3"></textarea>
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="justificatif" class="col-sm-4">Justificatif</label>
+                <div class="col-sm-8">
+                  <div class="custom-file">
+                      <input type="file" class="custom-file-input" id="justificatif">
+                      <label for="justificatif" class="custom-file-label" readonly>Télécharger la pièce justificative</label>
+                  </div>
+                </div>
+              </div>
+
+              <div class="input-group mb-3">
+                <div class="input-group-prepend">
+                  <div class="input-group-text">
+                    <input type="checkbox" aria-label="Checkbox for following text input">
+                  </div>
+                </div>
+                <input type="text" class="form-control" readonly placeholder="Ajouter à mon google Agenda">
+              </div>
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cancelDemandeConge($('#eventReceive').val())">Annuler</button>
+            <button type="button" class="btn btn-primary" onclick="confirm_form_Demandeconge()">Valider</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- -------- Modal 2  Validation d'une demande de congé ---------- --> 
+    <div class="modal fade" id="modalValidationConge" tabindex="-1" role="dialog" aria-labelledby="modalValidationCongeLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalValidationCongeLabel">Valider le Congé</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            
+            <!-- -------- Formulaire Validation Conge ---------- -->
+            <form id='form-validation-conge'>
+              <div class="form-group row">
+                  <label for="VtypeConge" class="col-sm-4">Type de congés</label>
+                  <div class="col-sm-8">
+                      <input class="form-control" id='VtypeConge' disabled="disabled">
+                  </div>
+              </div>
+    
+              <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="VdateDebut">Date de début</label>
+                    <input type="date" class="form-control" id="VdateDebut" disabled="disabled">
+                </div>
+                <div class="col-sm-6">
+                    <label for="VdateFin">Date de fin</label>
+                    <input type="date" class="form-control" id="VdateFin" disabled="disabled">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <div class="col-sm-6">
+                  <label for="VheureDebut">Heure de début</label>
+                  <input class="form-control" id="VheureDebut" disabled="disabled">
+                </div>
+                <div class="col-sm-6">
+                  <label for="VheureFin">Heure de fin</label>              
+                  <input class="form-control" id="VheureFin" disabled="disabled">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="VnbJours" class="col-sm-4">Nombre de jours</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" id="VnbJours" disabled="disabled">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="Vcommentaire" class="col-sm-4">Commentaires</label>
+                <div class="col-sm-8">
+                  <textarea class="form-control" id="Vcommentaire" rows="3" disabled="disabled"></textarea>
+                </div>
+              </div>            
+            </form>
+            
+          </div>
+
+          <div class="modal-footer">
+              <button type="button" class="btn btn-danger" onclick="denyDemandeConge($('#eventClicked').val())" data-dismiss="modal">Refuser</button>
+              <button type="button" class="btn btn-primary" onclick="validation_demande_conge($('#eventClicked').val())">Valider</button>
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- -------- Modal 3  Infos Congé ---------- -->   
+    <div class="modal fade" id="modalInfoConge" tabindex="-1" role="dialog" aria-labelledby="modalInfoCongeLabel" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalInfoCongeLabel">Description Congé</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            
+            <!-- -------- Formulaire Info Conge ---------- -->
+            <form id='form-info-conge'>
+              <div class="form-group row">
+                  <label for="ItypeConge" class="col-sm-4">Type de congés</label>
+                  <div class="col-sm-8">
+                      <input class="form-control" id='ItypeConge' disabled="disabled">
+                  </div>
+              </div>
+    
+              <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="IdateDebut">Date de début</label>
+                    <input type="date" class="form-control" id="IdateDebut" disabled="disabled">
+                </div>
+                <div class="col-sm-6">
+                    <label for="IdateFin">Date de fin</label>
+                    <input type="date" class="form-control" id="IdateFin" disabled="disabled">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <div class="col-sm-6">
+                  <label for="IheureDebut">Heure de début</label>
+                  <input class="form-control" id="IheureDebut" disabled="disabled">
+                </div>
+                <div class="col-sm-6">
+                  <label for="IheureFin">Heure de fin</label>              
+                  <input class="form-control" id="IheureFin" disabled="disabled">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="InbJours" class="col-sm-4">Nombre de jours</label>
+                <div class="col-sm-8">
+                  <input type="text" class="form-control" id="InbJours" disabled="disabled">
+                </div>
+              </div>
+
+              <div class="form-group row">
+                <label for="Icommentaire" class="col-sm-4">Commentaires</label>
+                <div class="col-sm-8">
+                  <textarea class="form-control" id="Icommentaire" rows="3" disabled="disabled"></textarea>
+                </div>
+              </div>            
+            </form>
+            
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- -------- Modal 4 Congé ---------- -->
+    <div class="modal fade" id="modalConge" tabindex="-1" role="dialog" aria-labelledby="modalCongeLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalCongeLabel">Ajouter un Congé</h5>
+              <button type="button" class="close" data-dismiss="modal" onclick="cancelDemandeConge($('#eventReceive').val())">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <!-- -------- Formulaire Congé ---------- -->
+              <form id='form-Conge'>
+                
+                <div class="form-group row">
+                  <label for="CtypeConge" class="col-sm-4">Type de congés</label>
+                  <div class="col-sm-8">
+                      <select class="custom-select" id="CtypeConge">
+                        <option selected>Congé Payé</option>
+                        <option value="1">Exceptionnel</option>
+                        <option value="2">Congé Maternité/Paternité</option>
+                      </select>
+                  </div>
+                </div>
+  
+                <div class="form-group row">
+                  <div class="col-sm-6">
+                      <label for="CdateDebut">Date de début</label>
+                      <input type="date" class="form-control" id="CdateDebut">
+                  </div>
+                  <div class="col-sm-6">
+                      <label for="CdateFin">Date de fin</label>
+                      <input type="date" class="form-control" id="CdateFin">
+                  </div>
+                </div>
+  
+                <div class="form-group row">
+                  <div class="col-sm-6">
+                    <label for="CheureDebut">Heure de début</label>
+                    <select class="custom-select" id="CheureDebut">
+                      <option selected>Matin</option>
+                      <option value="1">Soir</option>
+                    </select>
+                  </div>
+                  <div class="col-sm-6">
+                    <label for="CheureFin">Heure de fin</label>              
+                    <select class="custom-select" id="CheureFin">
+                      <option selected>Soir</option>
+                      <option value="1">Matin</option>
+                    </select>
+                  </div>
+                </div>
+  
+                <div class="form-group row">
+                  <label for="CnbJours" class="col-sm-4">Nombre de jours</label>
+                  <div class="col-sm-8">
+                    <input type="text" class="form-control" id="CnbJours">
+                  </div>
+                </div>
+  
+                <div class="form-group row">
+                  <label for="Ccommentaire" class="col-sm-4">Commentaires</label>
+                  <div class="col-sm-8">
+                    <textarea class="form-control" id="Ccommentaire" rows="3"></textarea>
+                  </div>
+                </div>
+              </form>
+            </div>
+  
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="cancelDemandeConge($('#eventReceive').val())">Annuler</button>
+              <button type="button" class="btn btn-primary" onclick="confirm_form_conge()">Valider</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    <!-- -------- Calendrier ---------- -->
+    <div id='calendar'></div>
+
+  </div>
+</body>
+</html>
