@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
   CreateEventPresence();
 });
 
-// --------- Confirmation du formulaire de Congé --------- //
+// --------- Confirmation du formulaire de Demande de Congé --------- //
 function confirm_form_Demandeconge(){
   let event = calendar.getEvents()[calendar.getEvents().length - 1];
   let start = new Date($('#dateDebut').val());
@@ -173,14 +173,21 @@ function confirm_form_Demandeconge(){
   demandeCongesInfo.push(info);
 
   let eventsToRemove = thisDateHasEvent(start,end,true);
-  if(eventsToRemove.length>0){
-    eventsToRemove.forEach(function(eventToRemove){
-      eventToRemove.remove();
-    })
-  }
+  setTimeout(function(){
+    if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
+      eventsToRemove.forEach(function(eventToRemove){
+        eventToRemove.remove();
+      })
+    }
+    else{
+      $('#alertE').alert();
+      $('#eventReceive').val().remove();
+    }
+  },10);
   $('#modalDemandeConge').modal('hide');
 }
 
+// --------- Confirmation du formulaire de Congé --------- //
 function confirm_form_conge(){
   let event = calendar.getEvents()[calendar.getEvents().length - 1];
   let start = new Date($('#CdateDebut').val());
@@ -198,11 +205,17 @@ function confirm_form_conge(){
   demandeCongesInfo.push(info);
 
   let eventsToRemove = thisDateHasEvent(start,end,true);
-  if(eventsToRemove.length>0){
-    eventsToRemove.forEach(function(eventToRemove){
-      eventToRemove.remove();
-    })
-  }
+  setTimeout(function(){
+    if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
+      eventsToRemove.forEach(function(eventToRemove){
+        eventToRemove.remove();
+      })
+    }
+    else{
+      $('#alertE').show();
+      $('#eventReceive').val().remove();
+    }
+  },10)
   $('#modalConge').modal('hide');
 }
 // --------- Annulation d'un Congé --------- //
@@ -242,6 +255,7 @@ function denyDemandeConge(event){
 
 // --------- Supression des évennements après drop d'un external event  --------- //
 function thisDateHasEvent(start,end,isTrue = false){
+  let hasNext = false;
   let allEvents = calendar.getEvents();
   if(isTrue)
     allEvents.splice(allEvents.length - 1)
@@ -264,9 +278,13 @@ function thisDateHasEvent(start,end,isTrue = false){
       })){
         if(event.classNames[0] == 'present')
           eventsToRemove.push(event);
+        else
+          hasNext = true;
       }
     })
   }
+  if(hasNext)
+    eventsToRemove.push(hasNext);
   return eventsToRemove;
 }
 
