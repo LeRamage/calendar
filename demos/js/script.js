@@ -104,21 +104,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
     drop: function(arg) {  
       Cid = arg.draggedEl.id;
-      if(Cid == 'demandeConge'){
-        setTimeout(function(){
-          let start = $('#eventReceive').val().start;
-          let end = $('#eventReceive').val().end;
-          let eventsToRemove = thisDateHasEvent(start,start);
-          if(eventsToRemove.length>0){
-            $('#modalDemandeConge').modal({backdrop: 'static'});
-            $('#modalDemandeConge').modal('show');
-            $('#dateDebut').val(arg["dateStr"]);
-            $('#dateFin').val(arg["dateStr"]);
-          }
-          else{
-            $('#eventReceive').val().remove();
-          }
-        }, 10);        
+
+      if(Cid == 'demandeConge'){                 
+        $('#modalDemandeConge').modal({backdrop: 'static'});
+        $('#modalDemandeConge').modal('show');
+        $('#dateDebut').val(arg["dateStr"]);
+        $('#dateFin').val(arg["dateStr"]);                       
       }
 
       else if(Cid == 'conge'){
@@ -170,20 +161,62 @@ function confirm_form_Demandeconge(){
     let val = $(this).val() ;
     info[info_id] = val;
   })
-  demandeCongesInfo.push(info);
-
   let eventsToRemove = thisDateHasEvent(start,end,true);
-  setTimeout(function(){
-    if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
-      eventsToRemove.forEach(function(eventToRemove){
-        eventToRemove.remove();
-      })
+  
+  if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
+    eventsToRemove.forEach(function(eventToRemove){
+      eventToRemove.remove();
+    })
+    demandeCongesInfo.push(info);
+  }
+
+  else{
+    let abort = false;
+    if(eventsToRemove[eventsToRemove.length-2].type == 'ferie_WE'){
+      for(i=0; i < eventsToRemove.length-2;i++){
+        if(eventsToRemove[i].classNames !='present' && eventsToRemove[i].type == undefined){
+          abort = true;
+          break;
+        }
+      }
+      if(!abort){
+        let index = 0;
+        while(eventsToRemove[index].classNames == 'present'){
+          index++;
+        }
+        let dateToBreak = eventsToRemove[index].start
+        event.setEnd(dateToBreak)
+        for(i=0;i < index;i++){
+          eventsToRemove[i].remove();       
+          $('#alertW').show();
+          setTimeout(function(){
+            $('#alertW').fadeOut(3000);
+          },5000)
+        }
+        info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);
+        demandeCongesInfo.push(info);
+      }
+      else{
+        $('#alertD').show();
+        setTimeout(function(){
+          $('#alertD').fadeOut(3000);
+        },5000)
+        setTimeout(function(){
+          $('#eventReceive').val().remove();
+        },10);
+      }
     }
     else{
-      $('#alertE').alert();
-      $('#eventReceive').val().remove();
+      $('#alertD').show();
+      setTimeout(function(){
+        $('#alertD').fadeOut(3000);
+      },5000)
+      setTimeout(function(){
+        $('#eventReceive').val().remove();
+      },10);
     }
-  },10);
+  }
+  
   $('#modalDemandeConge').modal('hide');
 }
 
@@ -202,21 +235,44 @@ function confirm_form_conge(){
     let val = $(this).val() ;
     info[info_id] = val;
   })
-  demandeCongesInfo.push(info);
-
   let eventsToRemove = thisDateHasEvent(start,end,true);
-  setTimeout(function(){
-    if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
-      eventsToRemove.forEach(function(eventToRemove){
-        eventToRemove.remove();
-      })
+  
+  if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true && eventsToRemove[eventsToRemove.length-1] != 'test'){
+    eventsToRemove.forEach(function(eventToRemove){
+      eventToRemove.remove();
+    })
+  }
+
+  else{
+    if(eventsToRemove[eventsToRemove.length-1] == 'test'){
+      let index = eventsToRemove.length-2;
+      while(eventsToRemove[index].type != undefined){
+        index--;
+      }
+      let dateToBreak = eventsToRemove[index+1].start
+      event.setEnd(dateToBreak)
+      for(i=0;i <= index;i++){
+        eventsToRemove[i].remove();
+        info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);       
+        $('#alertW').show();
+        setTimeout(function(){
+          $('#alertW').fadeOut(3000);
+        },5000)
+      }
     }
     else{
-      $('#alertE').show();
-      $('#eventReceive').val().remove();
+      $('#alertD').show();
+      setTimeout(function(){
+        $('#alertD').fadeOut(3000);
+      },5000)
+      setTimeout(function(){
+        $('#eventReceive').val().remove();
+      },10);
     }
-  },10)
-  $('#modalConge').modal('hide');
+  }
+  
+  demandeCongesInfo.push(info);
+  $('#modalDemandeConge').modal('hide');
 }
 // --------- Annulation d'un Congé --------- //
 function cancelDemandeConge(event){
@@ -253,9 +309,11 @@ function denyDemandeConge(event){
   $('#modalValidationConge').modal('hide'); 
 }
 
-// --------- Supression des évennements après drop d'un external event  --------- //
+/* --------- Check si un évenemment existe à/aux dates(s) du drop 
+             Si celui-ci est de type présent le drop est possible, sinon erreur --------- */
 function thisDateHasEvent(start,end,isTrue = false){
-  let hasNext = false;
+  let hasNext = false, nxtEventIsWE_Ferie = false;
+  let nxtEventContent = [];
   let allEvents = calendar.getEvents();
   if(isTrue)
     allEvents.splice(allEvents.length - 1)
@@ -263,7 +321,7 @@ function thisDateHasEvent(start,end,isTrue = false){
   let eventsToRemove = [];
 
   if(start.getTime() === end.getTime()  ){ // External Event = 1 journée
-    let isExistsASibling = allEvents.some(function(event){
+    allEvents.some(function(event){
       if(event.start.getTime() === start.getTime()){
         if(event.classNames[0] == 'present')
           eventsToRemove.push(event);
@@ -271,35 +329,52 @@ function thisDateHasEvent(start,end,isTrue = false){
     })
   }
 
-  else{ // External Event = plrs journée
-    let isExistsASibling = allEvents.some(function(event){ 
+  else{ // External Event = plrs journées
+    allEvents.some(function(event){ 
       if(daysToCheck.find(function(date){
         return date.getTime() === event.start.getTime();
       })){
         if(event.classNames[0] == 'present')
           eventsToRemove.push(event);
-        else
+        else if(event.classNames[0] == 'ferie_WE'){
+          nxtEventIsWE_Ferie = true;
           hasNext = true;
-      }
+          let Content = {
+            type: 'ferie_WE',
+            start : event.start
+          };
+          nxtEventContent.push(Content)
+        }
+        else{
+          eventsToRemove.push(event);
+          hasNext = true;
+        }        
+      }   
     })
   }
-  if(hasNext)
+  if(hasNext && !nxtEventIsWE_Ferie)
     eventsToRemove.push(hasNext);
+  if(nxtEventIsWE_Ferie){
+    nxtEventContent.forEach(function(nec){
+      eventsToRemove.push(nec);
+    })
+    eventsToRemove.push(hasNext);
+  }
   return eventsToRemove;
 }
 
 // --------- Obtenir un évenement à une date [date] --------- //
-function getEventByDate(date){
-  let allEvents = calendar.getEvents();
-  let eventAtDate;
+// function getEventByDate(date){
+//   let allEvents = calendar.getEvents();
+//   let eventAtDate;
 
-  allEvents.forEach(function(event){    
-    if(event.start.getTime() === date.getTime()){
-      eventAtDate = event
-    }
-  }) 
-  return eventAtDate;
-}
+//   allEvents.forEach(function(event){    
+//     if(event.start.getTime() === date.getTime()){
+//       eventAtDate = event
+//     }
+//   }) 
+//   return eventAtDate;
+// }
 
 // --------- Creer ID unique --------- //
 function ID(){
