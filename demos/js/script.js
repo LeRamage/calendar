@@ -153,7 +153,7 @@ function confirm_form_Demandeconge(){
   let end = new Date($('#dateFin').val());
   start.setHours(0,0,0,0);
   end.setHours(1,0,0,0);
-  event.setDates(start,end)
+  event.setDates(start,end);
  
   let info = []
   $("form#form-demandeConge :input").each(function(){
@@ -227,7 +227,7 @@ function confirm_form_conge(){
   let end = new Date($('#CdateFin').val());
   start.setHours(0,0,0,0);
   end.setHours(1,0,0,0);
-  event.setDates(start,end)
+  event.setDates(start,end);
  
   let info = []
   $("form#form-Conge :input").each(function(){
@@ -237,27 +237,48 @@ function confirm_form_conge(){
   })
   let eventsToRemove = thisDateHasEvent(start,end,true);
   
-  if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true && eventsToRemove[eventsToRemove.length-1] != 'test'){
+  if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
     eventsToRemove.forEach(function(eventToRemove){
       eventToRemove.remove();
     })
+    demandeCongesInfo.push(info);
   }
 
   else{
-    if(eventsToRemove[eventsToRemove.length-1] == 'test'){
-      let index = eventsToRemove.length-2;
-      while(eventsToRemove[index].type != undefined){
-        index--;
+    let abort = false;
+    if(eventsToRemove[eventsToRemove.length-2].type == 'ferie_WE'){
+      for(i=0; i < eventsToRemove.length-2;i++){
+        if(eventsToRemove[i].classNames !='present' && eventsToRemove[i].type == undefined){
+          abort = true;
+          break;
+        }
       }
-      let dateToBreak = eventsToRemove[index+1].start
-      event.setEnd(dateToBreak)
-      for(i=0;i <= index;i++){
-        eventsToRemove[i].remove();
-        info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);       
-        $('#alertW').show();
+      if(!abort){
+        let index = 0;
+        // trier eventsToRemove pour corriger le post weekend 
+        while(eventsToRemove[index].classNames == 'present'){
+          index++;
+        }
+        let dateToBreak = eventsToRemove[index].start
+        event.setEnd(dateToBreak)
+        for(i=0;i < index;i++){
+          eventsToRemove[i].remove();       
+          $('#alertW').show();
+          setTimeout(function(){
+            $('#alertW').fadeOut(3000);
+          },5000)
+        }
+        info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);
+        demandeCongesInfo.push(info);
+      }
+      else{
+        $('#alertD').show();
         setTimeout(function(){
-          $('#alertW').fadeOut(3000);
+          $('#alertD').fadeOut(3000);
         },5000)
+        setTimeout(function(){
+          $('#eventReceive').val().remove();
+        },10);
       }
     }
     else{
@@ -271,8 +292,7 @@ function confirm_form_conge(){
     }
   }
   
-  demandeCongesInfo.push(info);
-  $('#modalDemandeConge').modal('hide');
+  $('#modalConge').modal('hide');
 }
 // --------- Annulation d'un Congé --------- //
 function cancelDemandeConge(event){
@@ -415,4 +435,13 @@ function CreateEventPresence(){
 
 var ID = function () {
   return '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function compare() {
+  if (a.start < b.start)
+     return -1;
+  if (a.start > b.start)
+     return 1;
+  if(a.start == b.start)
+    return 0;
 }
