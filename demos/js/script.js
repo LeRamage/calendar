@@ -1,6 +1,7 @@
 var calendar ;
 var demandeCongesInfo = [];
-
+var startTest = new Date('May 01, 2019 00:00:00');
+var endTest = new Date('May May 01, 2019 23:59:59')
 
 document.addEventListener('DOMContentLoaded', function() {
     var Calendar = FullCalendar.Calendar;
@@ -31,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
           title: eventEl.innerText.trim(),
           classNames:_id,
           id:_id,
-          allDay: false
         }
       });
     });
@@ -51,16 +51,18 @@ document.addEventListener('DOMContentLoaded', function() {
       center: 'title',
       right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
     },
-
+    
     events: [
       {
-        id:'ferie_WE',
-        title:'Weekend',
-        daysOfWeek: [0,6],
-        classNames:'ferie_WE'
+        title: 'test',
+        start: new Date('May 20, 2019 09:00:00'),
+        end: new Date('May 20, 2019 18:00:00'),
+        displayEventTime: true
       }
-    ],
+    ], 
+
     
+    //allDay: true,
     firstDay: 1,
     editable: true,
     droppable: true, // this allows things to be dropped onto the calendar
@@ -121,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       else{
         start = new Date(arg["dateStr"]);
-        start.setHours(0,0,0,0)
+        start.setHours(0,0,0,0);
         let eventsToRemove = thisDateHasEvent(start,start);
         if(eventsToRemove.length>0){
           eventsToRemove.forEach(function(eventToRemove){
@@ -140,6 +142,49 @@ document.addEventListener('DOMContentLoaded', function() {
       element = $(event.el);
       element.css('border','none'); 
     },
+
+    eventDrop: function(e){
+      let oldEvent = e.oldEvent;
+
+      if(e.event.end === null){
+        let eventToReplace = constrainDrop(e.event.start,e.event.start);
+        eventToReplace[0].setDates(oldEvent.start,oldEvent.start);
+      }
+      else{
+        let datesToReplace = createDateArray(e.oldEvent.start,moment(e.oldEvent.end).subtract(1, "days")._d);
+        let eventsToReplace = constrainDrop(e.event.start,e.event.end, true);
+        let iterator = 0;
+        eventsToReplace.forEach(function(event){
+          event.setDates(datesToReplace[iterator],datesToReplace[iterator]);
+          iterator++;
+        })
+      }       
+    },
+
+    eventResize: function(e){
+      if(e.endDelta.days > 0){
+        let eventsToRemove = constrainResize(e.endDelta.days,e.event.start);
+        eventsToRemove.forEach(function(event){
+          event.remove();
+        })
+      }
+
+      else if(e.endDelta.days < 0){
+        console.log(Math.abs(e.endDelta.days))
+        let event= []
+        for(i = 1; i <= Math.abs(e.endDelta.days); i++){
+          event = [
+            {
+              classNames: 'present',
+              title: "Present(e)",
+              start: moment(e.prevEvent.end).subtract(i, "days")._d,
+            }
+          ]
+          calendar.addEventSource(event)
+        }
+      }
+
+    }
 
   });
   calendar.render();
@@ -168,45 +213,10 @@ function confirm_form_Demandeconge(){
       eventToRemove.remove();
     })
     demandeCongesInfo.push(info);
+    event.setAllDay(true);
   }
 
-  // else{
-  //   let abort = false;
-  //   if(eventsToRemove[eventsToRemove.length-2].type == 'ferie_WE'){
-  //     for(i=0; i < eventsToRemove.length-2;i++){
-  //       if(eventsToRemove[i].classNames !='present' && eventsToRemove[i].type == undefined){
-  //         abort = true;
-  //         break;
-  //       }
-  //     }
-  //     if(!abort){
-  //       let index = 0;
-  //       while(eventsToRemove[index].classNames == 'present'){
-  //         index++;
-  //       }
-  //       let dateToBreak = eventsToRemove[index].start
-  //       event.setEnd(dateToBreak)
-  //       for(i=0;i < index;i++){
-  //         eventsToRemove[i].remove();       
-  //         $('#alertW').show();
-  //         setTimeout(function(){
-  //           $('#alertW').fadeOut(3000);
-  //         },5000)
-  //       }
-  //       info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);
-  //       demandeCongesInfo.push(info);
-  //     }
-  //     else{
-  //       $('#alertD').show();
-  //       setTimeout(function(){
-  //         $('#alertD').fadeOut(3000);
-  //       },5000)
-  //       setTimeout(function(){
-  //         $('#eventReceive').val().remove();
-  //       },10);
-  //     }
-  //   }
-    else{
+  else{
       $('#alertD').show();
       setTimeout(function(){
         $('#alertD').fadeOut(3000);
@@ -214,7 +224,6 @@ function confirm_form_Demandeconge(){
       setTimeout(function(){
         $('#eventReceive').val().remove();
       },10);
-    }
   }
   
   $('#modalDemandeConge').modal('hide');
@@ -242,56 +251,19 @@ function confirm_form_conge(){
       eventToRemove.remove();
     })
     demandeCongesInfo.push(info);
+    event.setAllDay(true);
   }
 
   else{
-    let abort = false;
-    if(eventsToRemove[eventsToRemove.length-2].type == 'ferie_WE'){
-      for(i=0; i < eventsToRemove.length-2;i++){
-        if(eventsToRemove[i].classNames !='present' && eventsToRemove[i].type == undefined){
-          abort = true;
-          break;
-        }
-      }
-      if(!abort){
-        let index = 0;
-        // trier eventsToRemove pour corriger le post weekend 
-        while(eventsToRemove[index].classNames == 'present'){
-          index++;
-        }
-        let dateToBreak = eventsToRemove[index].start
-        event.setEnd(dateToBreak)
-        for(i=0;i < index;i++){
-          eventsToRemove[i].remove();       
-          $('#alertW').show();
-          setTimeout(function(){
-            $('#alertW').fadeOut(3000);
-          },5000)
-        }
-        info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);
-        demandeCongesInfo.push(info);
-      }
-      else{
-        $('#alertD').show();
-        setTimeout(function(){
-          $('#alertD').fadeOut(3000);
-        },5000)
-        setTimeout(function(){
-          $('#eventReceive').val().remove();
-        },10);
-      }
-    }
-    else{
-      $('#alertD').show();
-      setTimeout(function(){
-        $('#alertD').fadeOut(3000);
-      },5000)
-      setTimeout(function(){
-        $('#eventReceive').val().remove();
-      },10);
-    }
+    $('#alertD').show();
+    setTimeout(function(){
+      $('#alertD').fadeOut(3000);
+    },5000)
+    setTimeout(function(){
+      $('#eventReceive').val().remove();
+    },10);
   }
-  
+
   $('#modalConge').modal('hide');
 }
 // --------- Annulation d'un Congé --------- //
@@ -330,7 +302,7 @@ function denyDemandeConge(event){
 }
 
 /* --------- Check si un évenemment existe à/aux dates(s) du drop 
-             Si celui-ci est de type présent le drop est possible, sinon erreur --------- */
+             Si celui-ci est de type présent ou weekend / ferié le drop est possible, sinon erreur --------- */
 function thisDateHasEvent(start,end,isTrue = false){
   let hasNext = false;
   let allEvents = calendar.getEvents();
@@ -353,17 +325,8 @@ function thisDateHasEvent(start,end,isTrue = false){
       if(daysToCheck.find(function(date){
         return date.getTime() === event.start.getTime();
       })){
-        if(event.classNames[0] == 'present')
+        if(event.classNames[0] == 'present' || event.classNames[0] == 'ferie_WE')
           eventsToRemove.push(event);
-        // else if(event.classNames[0] == 'ferie_WE'){
-        //   nxtEventIsWE_Ferie = true;
-        //   hasNext = true;
-        //   let Content = {
-        //     type: 'ferie_WE',
-        //     start : event.start
-        //   };
-        //   nxtEventContent.push(Content)
-        // }
         else{
           eventsToRemove.push(event);
           hasNext = true;
@@ -377,25 +340,67 @@ function thisDateHasEvent(start,end,isTrue = false){
   return eventsToRemove;
 }
 
-// --------- Obtenir un évenement à une date [date] --------- //
-// function getEventByDate(date){
-//   let allEvents = calendar.getEvents();
-//   let eventAtDate;
+// --------- Contraintes pour les Drops  --------- //
+function constrainDrop(start,end,isTrue = false){
+  let allEvents = calendar.getEvents();
+  let eventsToReplace = [];
+  if(isTrue)
+    allEvents.splice(allEvents.length - 1)
+  
+  if(start.getTime() === end.getTime()){
+    index = allEvents.findIndex(function(event){
+      return event.start.getTime() === start.getTime();
+    })
+    if(allEvents[index].classNames[0] == 'present'){
+      eventsToReplace.push(allEvents[index]);
+    }
+  }
 
-//   allEvents.forEach(function(event){    
-//     if(event.start.getTime() === date.getTime()){
-//       eventAtDate = event
-//     }
-//   }) 
-//   return eventAtDate;
-// }
+  else{
+    end = moment(end).subtract(1, "days")._d;
+    let dates = createDateArray(start,end)
+    allEvents.findIndex(function(event){
+      if(dates.find(function(date){
+        return date.getTime() === event.start.getTime();
+      })){
+        if(event.classNames[0] == "present")
+          eventsToReplace.push(event)
+      }
+    })
+  }
+  return eventsToReplace;
+}
+
+// --------- Contraintes pour les resizes  --------- //
+function constrainResize(days,start){
+  let allEvents = calendar.getEvents();
+  let eventsToRemove = [];
+  let eventsToRefill = [];
+  allEvents.sort(function(a,b){
+    return a.start.getTime() - b.start.getTime();
+  })
+
+  if(days > 0){
+    index = allEvents.findIndex(function(event){
+      return event.start.getTime() === start.getTime();
+    })  
+    for(i = 1; i <= days;i++){
+      eventsToRemove.push(allEvents[index+i]);
+    }
+    return eventsToRemove;
+  }
+
+  else{
+    return [];
+  }
+}
 
 // --------- Creer ID unique --------- //
 function ID(){
   return '_' + Math.random().toString(36).substr(2, 9);
 }
 
-// --------- Tableau contenant toutes les dates de la page courantes / de start à end  --------- //
+// --------- Tableau contenant toutes les dates entre une start date et une end date  --------- //
 function createDateArray(start,end){
   let
     dateArray = [],
@@ -409,16 +414,27 @@ function createDateArray(start,end){
 }
 
 
-// --------- Ajout dynamique de l'évenement présence --------- //
+// --------- Ajout dynamique de l'évenement Présence + Weekend--------- //
 function CreateEventPresence(){
   let view = calendar.view;
+  let event = [];
   let dates = createDateArray(view.activeStart, view.activeEnd)
   dates.forEach(function(date){
     if(![0,6].includes(date.getDay())){
-      let event = [
+      event = [
         {
           classNames: 'present',
           title: "Present(e)",
+          start: date,
+        }
+      ]
+      calendar.addEventSource(event)
+    }
+    else{
+      event = [
+        {
+          classNames: 'ferie_WE',
+          title: "Weekend",
           start: date
         }
       ]
@@ -427,15 +443,3 @@ function CreateEventPresence(){
   })
 }
 
-var ID = function () {
-  return '_' + Math.random().toString(36).substr(2, 9);
-}
-
-function compare() {
-  if (a.start < b.start)
-     return -1;
-  if (a.start > b.start)
-     return 1;
-  if(a.start == b.start)
-    return 0;
-}

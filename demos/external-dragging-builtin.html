@@ -27,13 +27,6 @@
       Vous ne pouvez pas faire cette action car <a href="#" class="alert-link">un événement</a> existe déjà aux dates demandées
   </div>
 
-  <!-- <div class="alert alert-warning fade show" role="alert" id='alertW' style="display:none;text-align: center">
-    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-      <span aria-hidden="true">&times;</span>
-    </button>
-    la durée de <a href="#" class="alert-link">l'événement</a> à été réduite puisqu'elle débordait sur un weekend ou un jour ferié
-  </div> -->
-
   <div id='eventClicked' style="display:none"></div>  
   <div id='eventReceive' style='display: none'></div>
 
@@ -52,7 +45,7 @@
   </div>
 
   <div id='wrap'>
-     <!-- -------- Modal 1 : Demande de Congé ---------- --> 
+    <!-- -------- Modal 1 : Demande de Congé ---------- --> 
     <div class="modal fade" id="modalDemandeConge" tabindex="-1" role="dialog" aria-labelledby="modalCongeLabel" aria-hidden="true">
       <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -362,22 +355,4 @@
 
   </div>
 </body>
-<script>
-  d1 = new Date('2019-05-01')
-  d2 = new Date('2019-05-02')
-  d3 = new Date('2019-05-03')
-  d4 = new Date('2019-05-04')
-
-  var liste = [d3,d1,d4,d2]
-
-  liste.sort(  function compare(a,b){
-    if(a < b)
-      return -1;
-    if(a > b)
-      return 1;
-    if(a == b)
-      return 0;
-  });
-
-</script>
 </html>
