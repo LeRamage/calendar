@@ -170,42 +170,42 @@ function confirm_form_Demandeconge(){
     demandeCongesInfo.push(info);
   }
 
-  else{
-    let abort = false;
-    if(eventsToRemove[eventsToRemove.length-2].type == 'ferie_WE'){
-      for(i=0; i < eventsToRemove.length-2;i++){
-        if(eventsToRemove[i].classNames !='present' && eventsToRemove[i].type == undefined){
-          abort = true;
-          break;
-        }
-      }
-      if(!abort){
-        let index = 0;
-        while(eventsToRemove[index].classNames == 'present'){
-          index++;
-        }
-        let dateToBreak = eventsToRemove[index].start
-        event.setEnd(dateToBreak)
-        for(i=0;i < index;i++){
-          eventsToRemove[i].remove();       
-          $('#alertW').show();
-          setTimeout(function(){
-            $('#alertW').fadeOut(3000);
-          },5000)
-        }
-        info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);
-        demandeCongesInfo.push(info);
-      }
-      else{
-        $('#alertD').show();
-        setTimeout(function(){
-          $('#alertD').fadeOut(3000);
-        },5000)
-        setTimeout(function(){
-          $('#eventReceive').val().remove();
-        },10);
-      }
-    }
+  // else{
+  //   let abort = false;
+  //   if(eventsToRemove[eventsToRemove.length-2].type == 'ferie_WE'){
+  //     for(i=0; i < eventsToRemove.length-2;i++){
+  //       if(eventsToRemove[i].classNames !='present' && eventsToRemove[i].type == undefined){
+  //         abort = true;
+  //         break;
+  //       }
+  //     }
+  //     if(!abort){
+  //       let index = 0;
+  //       while(eventsToRemove[index].classNames == 'present'){
+  //         index++;
+  //       }
+  //       let dateToBreak = eventsToRemove[index].start
+  //       event.setEnd(dateToBreak)
+  //       for(i=0;i < index;i++){
+  //         eventsToRemove[i].remove();       
+  //         $('#alertW').show();
+  //         setTimeout(function(){
+  //           $('#alertW').fadeOut(3000);
+  //         },5000)
+  //       }
+  //       info['VdateFin'] = dateToBreak.toISOString().substring(0, 10);
+  //       demandeCongesInfo.push(info);
+  //     }
+  //     else{
+  //       $('#alertD').show();
+  //       setTimeout(function(){
+  //         $('#alertD').fadeOut(3000);
+  //       },5000)
+  //       setTimeout(function(){
+  //         $('#eventReceive').val().remove();
+  //       },10);
+  //     }
+  //   }
     else{
       $('#alertD').show();
       setTimeout(function(){
@@ -332,8 +332,7 @@ function denyDemandeConge(event){
 /* --------- Check si un évenemment existe à/aux dates(s) du drop 
              Si celui-ci est de type présent le drop est possible, sinon erreur --------- */
 function thisDateHasEvent(start,end,isTrue = false){
-  let hasNext = false, nxtEventIsWE_Ferie = false;
-  let nxtEventContent = [];
+  let hasNext = false;
   let allEvents = calendar.getEvents();
   if(isTrue)
     allEvents.splice(allEvents.length - 1)
@@ -356,15 +355,15 @@ function thisDateHasEvent(start,end,isTrue = false){
       })){
         if(event.classNames[0] == 'present')
           eventsToRemove.push(event);
-        else if(event.classNames[0] == 'ferie_WE'){
-          nxtEventIsWE_Ferie = true;
-          hasNext = true;
-          let Content = {
-            type: 'ferie_WE',
-            start : event.start
-          };
-          nxtEventContent.push(Content)
-        }
+        // else if(event.classNames[0] == 'ferie_WE'){
+        //   nxtEventIsWE_Ferie = true;
+        //   hasNext = true;
+        //   let Content = {
+        //     type: 'ferie_WE',
+        //     start : event.start
+        //   };
+        //   nxtEventContent.push(Content)
+        // }
         else{
           eventsToRemove.push(event);
           hasNext = true;
@@ -372,14 +371,9 @@ function thisDateHasEvent(start,end,isTrue = false){
       }   
     })
   }
-  if(hasNext && !nxtEventIsWE_Ferie)
+  if(hasNext)
     eventsToRemove.push(hasNext);
-  if(nxtEventIsWE_Ferie){
-    nxtEventContent.forEach(function(nec){
-      eventsToRemove.push(nec);
-    })
-    eventsToRemove.push(hasNext);
-  }
+
   return eventsToRemove;
 }
 
