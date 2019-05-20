@@ -375,7 +375,6 @@ function constrainDrop(start,end,isTrue = false){
 function constrainResize(days,start){
   let allEvents = calendar.getEvents();
   let eventsToRemove = [];
-  let eventsToRefill = [];
   allEvents.sort(function(a,b){
     return a.start.getTime() - b.start.getTime();
   })
