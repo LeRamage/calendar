@@ -88,3 +88,9 @@ body {
     text-align: center ;
 }
 
+.not-valid{
+    border:#dc3545 solid 1px !important;
+}
+#invalid{
+    color:#dc3545;
+}
