@@ -20,7 +20,7 @@
 </head>
 <body>
 
-  <!-- -------- Evenements Exterieur ---------- -->
+  <!-- -------- Information Alert ---------- -->
   <div class="alert alert-danger fade show" role="alert" id='alertD' style="display:none;text-align: center">
       <button type="button" class="close" data-dismiss="alert" aria-label="Close">
         <span aria-hidden="true">&times;</span>
@@ -28,6 +28,7 @@
       Vous ne pouvez pas faire cette action car <a href="#" class="alert-link">un événement</a> existe déjà aux dates demandées
   </div>
 
+    <!-- -------- Stockage event ---------- -->
   <div id='eventClicked' style="display:none"></div>  
   <div id='eventReceive' style='display: none'></div>
 
@@ -64,9 +65,9 @@
                 <label for="typeConge" class="col-sm-4">Type de congés</label>
                 <div class="col-sm-8">
                     <select class="custom-select" id="typeConge">
-                      <option selected>Congé Payé</option>
-                      <option value="1">Exceptionnel</option>
-                      <option value="2">Congé Maternité/Paternité</option>
+                      <option selected value="Congé Payé">Congé Payé</option>
+                      <option value="Exceptionnel">Exceptionnel</option>
+                      <option value="Congé Maternité/Paternité">Congé Maternité/Paternité</option>
                     </select>
                 </div>
               </div>
@@ -79,7 +80,7 @@
                 <div class="col-sm-6">
                     <label for="dateFin">Date de fin</label>
                     <input type="date" class="form-control" id="dateFin">
-                    <div id="invalid" style="display: none" style="color: #dc3545 !important">
+                    <div class="invalid" style="display: none">
                       Date de fin inférieur à Date de début
                     </div>
                 </div>
@@ -89,25 +90,31 @@
                 <div class="col-sm-6">
                   <label for="heureDebut">Heure de début</label>
                   <select class="custom-select" id="heureDebut">
-                    <option selected >Matin</option>
-                    <option value="1">Soir</option>
+                    <option selected value="Matin">Matin</option>
+                    <option value="Soir">Après-midi</option>
                   </select>
                 </div>
                 <div class="col-sm-6">
                   <label for="heureFin">Heure de fin</label>              
                   <select class="custom-select" id="heureFin">
-                    <option selected>Soir</option>
-                    <option value="1">Matin</option>
+                    <option selected value="Soir">Soir</option>
+                    <option value="Matin">Après-midi</option>
                   </select>
                 </div>
               </div>
 
-              <div class="form-group row">
+              <!-- <div class="form-group row">
                 <label for="nbJours" class="col-sm-4">Nombre de jours</label>
                 <div class="col-sm-8">
-                  <input type="text" class="form-control" id="nbJours">
+                  <input type="number" class="form-control" id="nbJours" min="1">
+                  <div class="require" style="display: none">
+                      Ce champ doit être rempli
+                  </div>
+                  <div class="notEqual0" style="display: none">
+                      Vous ne pouvez pas mettre une valeur inférieur à 1
+                  </div>
                 </div>
-              </div>
+              </div> -->
 
               <div class="form-group row">
                 <label for="commentaire" class="col-sm-4">Commentaires</label>
@@ -188,12 +195,12 @@
                 </div>
               </div>
 
-              <div class="form-group row">
+              <!-- <div class="form-group row">
                 <label for="VnbJours" class="col-sm-4">Nombre de jours</label>
                 <div class="col-sm-8">
                   <input type="text" class="form-control" id="VnbJours" disabled="disabled">
                 </div>
-              </div>
+              </div> -->
 
               <div class="form-group row">
                 <label for="Vcommentaire" class="col-sm-4">Commentaires</label>
@@ -256,12 +263,12 @@
                 </div>
               </div>
 
-              <div class="form-group row">
+              <!-- <div class="form-group row">
                 <label for="InbJours" class="col-sm-4">Nombre de jours</label>
                 <div class="col-sm-8">
                   <input type="text" class="form-control" id="InbJours" disabled="disabled">
                 </div>
-              </div>
+              </div> -->
 
               <div class="form-group row">
                 <label for="Icommentaire" class="col-sm-4">Commentaires</label>
@@ -296,8 +303,8 @@
                   <div class="col-sm-8">
                       <select class="custom-select" id="CtypeConge">
                         <option selected>Congé Payé</option>
-                        <option value="1">Exceptionnel</option>
-                        <option value="2">Congé Maternité/Paternité</option>
+                        <option value="Exceptionnel">Exceptionnel</option>
+                        <option value="Congé Maternité/Paternité">Congé Maternité/Paternité</option>
                       </select>
                   </div>
                 </div>
@@ -310,6 +317,9 @@
                   <div class="col-sm-6">
                       <label for="CdateFin">Date de fin</label>
                       <input type="date" class="form-control" id="CdateFin">
+                      <div class="invalid" style="display: none">
+                        Date de fin inférieur à Date de début
+                      </div>
                   </div>
                 </div>
   
@@ -317,15 +327,15 @@
                   <div class="col-sm-6">
                     <label for="CheureDebut">Heure de début</label>
                     <select class="custom-select" id="CheureDebut">
-                      <option selected>Matin</option>
-                      <option value="1">Soir</option>
+                      <option selected value="Matin">Matin</option>
+                      <option value="Soir">Après-midi</option>
                     </select>
                   </div>
                   <div class="col-sm-6">
                     <label for="CheureFin">Heure de fin</label>              
                     <select class="custom-select" id="CheureFin">
-                      <option selected>Soir</option>
-                      <option value="1">Matin</option>
+                      <option selected value="Soir">Soir</option>
+                      <option value="1" value="Matin">Après-midi</option>
                     </select>
                   </div>
                 </div>
@@ -333,7 +343,13 @@
                 <div class="form-group row">
                   <label for="CnbJours" class="col-sm-4">Nombre de jours</label>
                   <div class="col-sm-8">
-                    <input type="text" class="form-control" id="CnbJours">
+                    <input type="number" class="form-control" id="CnbJours" min="1">
+                    <div class="require" style="display: none">
+                        Ce champ doit être rempli
+                    </div>
+                    <div class="notEqual0" style="display: none">
+                        Vous ne pouvez pas mettre une valeur inférieur à 1
+                    </div>
                   </div>
                 </div>
   
@@ -353,6 +369,48 @@
           </div>
         </div>
       </div>
+
+    <!-- -------- Modal 5 Absence ---------- -->
+    <div class="modal fade" id="modalAbsence" tabindex="-1" role="dialog" aria-labelledby="modalAbsenceLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="modalAbsenceLabel">Ajouter une Absence</h5>
+              <button type="button" class="close" data-dismiss="modal" onclick="cancelDemandeConge($('#eventReceive').val())">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <!-- -------- Formulaire Absence ---------- -->
+              <form id='form-absence'>
+
+                <div class="form-group row">
+                  <label for="type-absence" class="col-sm-4">Quand?</label>
+                  <div class="col-sm-8">
+                      <select class="custom-select" id="type-absence">
+                        <option selected>Toute la journée</option>
+                        <option value="1">Le Matin</option>
+                        <option value="2">L'après-midi</option>
+                      </select>
+                  </div>
+                </div>
+
+              </form>
+            </div>
+  
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" onclick="cancelDemandeConge($('#eventReceive').val())">Annuler</button>
+              <button type="button" class="btn btn-primary" type="submit" onclick="confirm_form_Absence()">Valider</button>
+            </div>
+          </div>
+        </div>
+      </div>          
+
+    <!-- -------- Modal 6 Arrêt ---------- -->
+
+    <!-- -------- Modal 7 Télétravail ---------- -->
+
+    <!-- -------- Modal 8 Formation ---------- -->
 
     <!-- -------- Calendrier ---------- -->
     <div id='calendar'></div>

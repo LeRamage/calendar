@@ -27,8 +27,6 @@ document.addEventListener('DOMContentLoaded', function() {
     -----------------------------------------------------------------*/
 
     var calendarEl = document.getElementById('calendar');
-    let Cid = "";
-    let element = [];
 
     calendar = new Calendar(calendarEl, {
     plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
@@ -40,20 +38,11 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     
     locale: 'fr',
-
-    // events: [
-    //   {
-    //     title: 'test',
-    //     start: new Date('May 20, 2019 09:00:00'),
-    //     end: new Date('May 20, 2019 18:00:00'),
-    //     displayEventTime: true
-    //   }
-    // ], 
-
     firstDay: 1,
     editable: true,
-    droppable: true, // this allows things to be dropped onto the calendar
-    displayEventTime: false,
+    droppable: true, 
+    displayEventTime: true,
+    displayEventEnd: true,
     disableDragging: true,
 
     eventClick: function(e) {
@@ -63,8 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if(eventClassNames == 'demandeConge'){
         demandeCongesInfo.forEach(function(conge){
           dateConge = new Date(conge["VdateDebut"]);
-          dateConge.setHours(0,0,0,0);
-          if(dateConge.getTime() == e.event.start.getTime())
+          if(moment(dateConge).dayOfYear() == moment(e.event.start).dayOfYear())
             Object.keys(conge).forEach(function(element){
               $('#'+element).val(conge[element]);
             })
@@ -76,8 +64,7 @@ document.addEventListener('DOMContentLoaded', function() {
       else if(eventClassNames == 'conge'){
         demandeCongesInfo.forEach(function(conge){
           dateConge = new Date(conge["VdateDebut"]);
-          dateConge.setHours(0,0,0,0);
-          if(dateConge.getTime() == e.event.start.getTime())
+          if(moment(dateConge).dayOfYear() == moment(e.event.start).dayOfYear())
             Object.keys(conge).forEach(function(element){
               $('#I'+element.slice(1)).val(conge[element]);
             })
@@ -92,50 +79,30 @@ document.addEventListener('DOMContentLoaded', function() {
     },
 
     drop: function(arg) {  
-      Cid = arg.draggedEl.id;
-      allEvents = calendar.getEvents();
-      let eventAtDropPlace = allEvents.find(function(event){
-        if(moment(event.start).dayOfYear() == moment(arg.date).dayOfYear()){
-          return event
-        }
-      })
-      
-      // if(moment(test.end).hour() == 12)
-      //   console.log('am in the morning')
-      // if(moment(test.end).hour() == 18)
-      //   console.log('am all day')
+      let Cid = arg.draggedEl.id;
+      // let allEvents = calendar.getEvents();
+      // let eventAtDropPlace = []
+      // allEvents.find(function(event){
+      //   if(moment(event.start).dayOfYear() == moment(arg.date).dayOfYear())
+      //     eventAtDropPlace.push(event)
+        // if(moment(event.start).dayOfYear() != moment(event.end).dayOfYear())
+        //   if(moment(event.end).dayOfYear() == moment(arg.date).dayOfYear())
+        //     eventAtDropPlace.push(event)
+      // })
       
       if(Cid == 'demandeConge'){
         start = arg.date;
-        if(moment(eventAtDropPlace.end).hour() == 12){
+        let eventsToRemove = thisDateHasEvent(start,start)
+        
+        if(eventsToRemove.length > 0 && eventsToRemove[eventsToRemove.length -1] != true){
           $('#modalDemandeConge').modal({backdrop: 'static'});
           $('#modalDemandeConge').modal('show');
           $('#dateDebut').val(arg["dateStr"]);
-          $('#dateFin').val(arg["dateStr"]);
-          $("#heureDebut option[value=1]").prop('selected',true);
-          console.log($('#heureDebut').val());
-          $('#heureDebut').attr("disabled","disabled");
+          $('#dateFin').val(arg["dateStr"]);  
         }
         else{
-          let eventsToRemove = thisDateHasEvent(start,start)
-          
-          if(eventsToRemove.length > 0 && eventsToRemove[eventsToRemove.length -1] != true){
-            $('#modalDemandeConge').modal({backdrop: 'static'});
-            $('#modalDemandeConge').modal('show');
-            $('#dateDebut').val(arg["dateStr"]);
-            $('#dateFin').val(arg["dateStr"]);  
-          }
-          else{
-            $('#alertD').show();
-            $('#modalDemandeConge').modal('hide');
-            setTimeout(function(){
-              $('#alertD').fadeOut(3000);
-            },5000)         
-            setTimeout(function(){
-              $('#eventReceive').val().remove();
-            },10);
-          }
-        }         
+          displayErrorDemandeConge();
+        }       
       }
 
       else if(Cid == 'conge'){
@@ -149,22 +116,14 @@ document.addEventListener('DOMContentLoaded', function() {
           $('#CdateFin').val(arg["dateStr"]);
         }
         else{
-          $('#alertD').show();
-          $('#modalDemandeConge').modal('hide');
-          setTimeout(function(){
-            $('#alertD').fadeOut(3000);
-          },5000)         
-          setTimeout(function(){
-            $('#eventReceive').val().remove();
-          },10);
+          displayErrorDemandeConge()
         }
       }
 
       else{
         start = new Date(arg["dateStr"]);
-        start.setHours(0,0,0,0);
         let eventsToRemove = thisDateHasEvent(start,start);
-        if(eventsToRemove.length>0){
+        if(eventsToRemove.length>0 && eventsToRemove[0]!=true){
           eventsToRemove.forEach(function(eventToRemove){
             eventToRemove.remove();
           })
@@ -178,12 +137,12 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     
     eventRender: function(event) {         
-      element = $(event.el);
+      let element = $(event.el);
       element.css('border','none'); 
     },
 
     eventDrop: function(e){
-      if(e.event.classNames[0] == 'demandeConge' || e.event.classNames[0] == 'conge'){
+      if(e.event.classNames[0] == 'demandeConge' || e.event.classNames[0] == 'conge' || e.event.classNames[0] == 'congeDeny'){
         e.event.remove();
         calendar.addEvent(e.oldEvent);
       }
@@ -221,7 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } 
       }      
     },
-
+    
     eventResize: function(e){
       if(e.endDelta.days > 0){
         let eventsToRemove = constrainResize(e.endDelta.days,e.event.start);
@@ -251,7 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
           calendar.addEventSource(event)
         }
       }
-    }
+    },
 
   });
   calendar.render();
@@ -264,85 +223,123 @@ function confirm_form_Demandeconge(){
   let start = new Date($('#dateDebut').val());
   let end = new Date($('#dateFin').val());
 
-  if(start < end == false){
-    $('#invalid').show()
+  if(start <= end == false){
+    $('.invalid').show()
     var element = document.getElementById('dateFin');
     element.classList.add('not-valid');
   }
+  // else if($('#nbJours').val().length == 0){
+  //   $('.require').show()
+  //   var element = document.getElementById('nbJours');
+  //   element.classList.add('not-valid');
+  // }
+  // else if($('#nbJours').val() <= 0){
+  //   $('.notEqual0').show()
+  //   var element = document.getElementById('nbJours');
+  //   element.classList.add('not-valid');
+  // }
   else{
-    $('#invalid').hide();
+    $('.invalid').hide();
     $('#dateFin').removeClass('not-valid');
+    $('.require').hide();
+    // $('#nbJours').removeClass('not-valid');
+    // $('.notEqual0').hide();
+
     let event = calendar.getEvents()[calendar.getEvents().length - 1];
     let startHour = $('#heureDebut').val();
     let endHour = $('#heureFin').val();
-
-    start.setHours(0,0,0,0)
-    end.setHours(1,0,0,0)
-    
     let info = []
+    if(startHour == 'Matin')
+      start.setHours(9,0,0,0);
+    else
+      start.setHours(13,0,0,0);
+    
+    if(endHour == 'Soir')
+      end.setHours(18,0,0,0);
+    else
+      end.setHours(12,0,0,0);
+
+    event.setDates(start,end); 
+
     $("form#form-demandeConge :input").each(function(){
       let info_id = 'V'+$(this)[0].id;
       let val = $(this).val() ;
       info[info_id] = val;
     })
-
     let eventsToRemove = thisDateHasEvent(start,end,true);
     if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
       eventsToRemove.forEach(function(eventToRemove){
         eventToRemove.remove();
       })
       demandeCongesInfo.push(info);
-      if(startHour == 'Matin')
-        start.setHours(9,0,0,0);
-      else
-        start.setHours(13,0,0,0);
-      
-      if(endHour == 'Soir')
-        end.setHours(18,0,0,0);
-      else
-        end.setHours(12,0,0,0);
-
-      event.setDates(start,end);    
+          let eventPresent;
+    if(moment(start).hour() == 13){
+      startPresent = start
+      endPresent = end
+      startPresent.setHours(9,0,0,0)
+      endPresent.setHours(12,0,0,0)
+      eventPresent = 
+        {
+          classNames: 'present',
+          title: "Present(e)",
+          start: startPresent,
+          end: endPresent,
+        }
     }
-
-    else{
-        $('#alertD').show();
-        setTimeout(function(){
-          $('#alertD').fadeOut(3000);
-        },5000)
-        setTimeout(function(){
-          $('#eventReceive').val().remove();
-        },10);
+    else if(moment(end).hour() == 12){
+      startPresent = start
+      endPresent = end
+      startPresent.setHours(13,0,0,0);
+      endPresent.setHours(18,0,0,0);
+      eventPresent = 
+        {
+          classNames: 'present',
+          title: "Present(e)",
+          start: startPresent,
+          end: endPresent,
+        }
     }
     
-    $('#modalDemandeConge').modal('hide');
+    calendar.addEvent(eventPresent);
+      $('#modalDemandeConge').modal('hide');   
+    }
+    else{
+      displayErrorDemandeConge();
+    }
   } 
 }
 
 // --------- Confirmation du formulaire de Congé --------- //
 function confirm_form_conge(){
-  let event = calendar.getEvents()[calendar.getEvents().length - 1];
   let start = new Date($('#CdateDebut').val());
   let end = new Date($('#CdateFin').val());
-  let startHour = $('#CheureDebut').val();
-  let endHour = $('#CheureFin').val();
 
-  start.setHours(0,0,0,0);
-  end.setHours(1,0,0,0);
- 
-  let info = []
-  $("form#form-Conge :input").each(function(){
-    let info_id = 'V'+$(this)[0].id.slice(1);
-    let val = $(this).val() ;
-    info[info_id] = val;
-  })
-  let eventsToRemove = thisDateHasEvent(start,end,true);
-  
-  if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
-    eventsToRemove.forEach(function(eventToRemove){
-      eventToRemove.remove();
-    })
-    demandeCongesInfo.push(info);
+  if(start <= end == false){
+    $('.invalid').show()
+    var element = document.getElementById('CdateFin');
+    element.classList.add('not-valid');
+  }
+  else if($('#CnbJours').val().length == 0){
+    $('.require').show()
+    var element = document.getElementById('CnbJours');
+    element.classList.add('not-valid');
+  }
+  else if($('#CnbJours').val() <= 0){
+    $('.notEqual0').show()
+    var element = document.getElementById('CnbJours');
+    element.classList.add('not-valid');
+  }
+  else{
+    $('.invalid').hide();
+    $('#CdateFin').removeClass('not-valid');
+    $('.require').hide();
+    $('#CnbJours').removeClass('not-valid');
+    $('.notEqual0').hide();
+
+    let event = calendar.getEvents()[calendar.getEvents().length - 1];
+    let startHour = $('#CheureDebut').val();
+    let endHour = $('#CheureFin').val();
+    let info = []
     if(startHour == 'Matin')
       start.setHours(9,0,0,0);
     else
@@ -354,24 +351,48 @@ function confirm_form_conge(){
       end.setHours(12,0,0,0);
 
     event.setDates(start,end);
-  }
 
-  else{
-    $('#alertD').show();
-    setTimeout(function(){
-      $('#alertD').fadeOut(3000);
-    },5000)
-    setTimeout(function(){
-      $('#eventReceive').val().remove();
-    },10);
-  }
+    $("form#form-Conge :input").each(function(){
+      let info_id = 'V'+$(this)[0].id.slice(1);
+      let val = $(this).val() ;
+      info[info_id] = val;
+    })
 
-  $('#modalConge').modal('hide');
+    let eventsToRemove = thisDateHasEvent(start,end,true);
+    
+    if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
+      eventsToRemove.forEach(function(eventToRemove){
+        eventToRemove.remove();
+      })
+      demandeCongesInfo.push(info);
+    }
+
+    else{
+      $('#alertD').show();
+      setTimeout(function(){
+        $('#alertD').fadeOut(3000);
+      },5000)
+      setTimeout(function(){
+        $('#eventReceive').val().remove();
+      },10);
+    }
+
+    $('#modalConge').modal('hide');
+  }
 }
 // --------- Annulation d'un Congé --------- //
 function cancelDemandeConge(event){
   $('#modalDemandeConge').modal('hide');
   $('#modalConge').modal('hide');
+  $('.invalid').hide();
+  $('#CdateFin').removeClass('not-valid');
+  $('.require').hide();
+  $('#CnbJours').removeClass('not-valid');
+  $('.invalid').hide();
+  $('#dateFin').removeClass('not-valid');
+  $('.require').hide();
+  $('#nbJours').removeClass('not-valid');
+  $('.notEqual0').hide();
   event.remove();
 }
 
@@ -413,13 +434,13 @@ function thisDateHasEvent(start,end,isTrue = false){
   let daysToCheck = createDateArray(start,end);
   let eventsToRemove = [];
 
-  if(start.getTime() === end.getTime()  ){ // External Event = 1 journée
+  if(moment(start).dayOfYear() === moment(end).dayOfYear()){ // External Event = 1 journée
     allEvents.some(function(event){
-      if(event.start.getTime() === start.getTime()){
+      if(moment(event.start).dayOfYear() === moment(start).dayOfYear()){
         if(event.classNames[0] == 'present')
           eventsToRemove.push(event);
         else
-          hasNext = true
+          hasNext = true;
       }       
     })
   }
@@ -427,12 +448,12 @@ function thisDateHasEvent(start,end,isTrue = false){
   else{ // External Event = plrs journées
     allEvents.some(function(event){ 
       if(daysToCheck.find(function(date){
-        return date.getTime() === event.start.getTime();
+        return moment(date).dayOfYear() === moment(event.start).dayOfYear();
       })){
+        console.log(event.classNames[0]);
         if(event.classNames[0] == 'present' || event.classNames[0] == 'ferie_WE')
           eventsToRemove.push(event);
         else{
-          eventsToRemove.push(event);
           hasNext = true;
         }        
       }   
@@ -452,9 +473,9 @@ function constrainDrop(start,end,indexOE = null){
   if(indexOE != null)
     allEvents.splice(indexOE,1)
   
-  if(start.getTime() === end.getTime()){
+  if(moment(start).dayOfYear() === moment(end).dayOfYear()){
     index = allEvents.findIndex(function(event){
-      return event.start.getTime() === start.getTime();
+      return moment(event.start).dayOfYear() === moment(start).dayOfYear();
     })
     if(allEvents[index].classNames[0] == 'present')
       eventsToReplace.push(allEvents[index]);
@@ -467,16 +488,14 @@ function constrainDrop(start,end,indexOE = null){
     let dates = createDateArray(start,end)
     allEvents.findIndex(function(event){
       if(dates.find(function(date){
-        return date.getTime() === event.start.getTime();
+        return moment(date).dayOfYear() === moment(event.start).dayOfYear();
       })){
-        console.log(event)
         if(event.classNames[0] == "present")
           eventsToReplace.push(event)
         else  
           eventsToReplace.push(true)
       }
     })
-    console.log(' /////////////////////////// ')
   }
   return eventsToReplace;
 }
@@ -487,12 +506,12 @@ function constrainResize(days,start){
   let eventsToRemove = [];
 
   allEvents.sort(function(a,b){
-    return a.start.getTime() - b.start.getTime();
+    return moment(a.start).dayOfYear() - moment(b.start).dayOfYear();
   })
 
   if(days > 0){
     index = allEvents.findIndex(function(event){
-      return event.start.getTime() === start.getTime();
+      return moment(event.start).dayOfYear() === moment(start).dayOfYear();
     })  
     for(i = 1; i <= days;i++){
       if(allEvents[index+i].classNames[0] === 'present')
@@ -521,7 +540,7 @@ function createDateArray(start,end){
     dateArray = [],
     dt = new Date(start);
 
-  while (dt <= end) {
+  while (moment(dt).dayOfYear() <= moment(end).dayOfYear()) {
     dateArray.push(new Date(dt));
     dt.setDate(dt.getDate() + 1);
   }
@@ -559,3 +578,15 @@ function CreateEventPresence(){
     }   
   })
 }
+
+function displayErrorDemandeConge(){
+  $('#alertD').show();
+  $('#modalDemandeConge').modal('hide');
+  setTimeout(function(){
+    $('#alertD').fadeOut(3000);
+  },5000)         
+  setTimeout(function(){
+    $('#eventReceive').val().remove();
+  },10);
+}
+
