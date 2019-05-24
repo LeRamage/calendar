@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
           $('#dateFin').val(arg["dateStr"]);  
         }
         else{
-          displayErrorDemandeConge();
+          displayError();
         }       
       }
 
@@ -109,13 +109,19 @@ document.addEventListener('DOMContentLoaded', function() {
           $('#CdateFin').val(arg["dateStr"]);
         }
         else{
-          displayErrorDemandeConge()
+          displayError()
         }
       }
 
       else{
-        start = new Date(arg["dateStr"]);
+        let start = new Date(arg["dateStr"]);
         let eventsToRemove = thisDateHasEvent(start,start);
+        let _ID = ID();
+
+        setTimeout(function(){
+          $('#eventReceive').val().setExtendedProp('ID',_ID);
+        }, 10);
+
         if(eventsToRemove.length>0 && eventsToRemove[0]!=true)
           eventsToRemove.forEach(eventToRemove => eventToRemove.remove());
         else{
@@ -130,6 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
       let element = $(event.el);
       element.css('border','none');
       
+      // ajoute un listener pour le click droit sur certains évenements
       if(event.event.classNames[0] != 'present' && event.event.classNames[0] != 'ferie_WE' && event.event.classNames[0] != 'specialPresent'){
         element[0].children[0].addEventListener('contextmenu', function(ev){
           ev.preventDefault();
@@ -186,19 +193,28 @@ document.addEventListener('DOMContentLoaded', function() {
         else{
           let datesToReplace = createDateArray(e.oldEvent.start,moment(e.oldEvent.end).subtract(1, "days")._d);
           let eventsToReplace = constrainDrop(e.event.start,e.event.end, indexOfEvent);
-          if(eventsToReplace.findIndex(function(event){
-            return event == true
-          }) != -1){
+          if(eventsToReplace.findIndex(event => event == true) != -1){
             e.event.remove();
             calendar.addEvent(oldEvent);
           }
           else{
-            let iterator = 0;
-            eventsToReplace.forEach(function(event){
-              event.setDates(datesToReplace[iterator],datesToReplace[iterator]);
-              event.setAllDay(true);
-              iterator++;
-            })
+            let iterator;
+            if(moment(e.event.start).isBefore(moment(oldEvent.start),'day')){
+              iterator = datesToReplace.length -1;
+              eventsToReplace.forEach(function(event){
+                event.setDates(datesToReplace[iterator],datesToReplace[iterator]);
+                event.setAllDay(true);
+                iterator--;
+              })
+            }
+            else{
+              iterator = 0;
+              eventsToReplace.forEach(function(event){
+                event.setDates(datesToReplace[iterator],datesToReplace[iterator]);
+                event.setAllDay(true);
+                iterator++;
+              })
+            }
           }
         } 
       }      
@@ -246,10 +262,13 @@ function confirm_form_Demandeconge(){
   let end = new Date($('#dateFin').val());
   let startHour = $('#heureDebut').val();
   let endHour = $('#heureFin').val();
+  let event = calendar.getEvents()[calendar.getEvents().length - 1];
+  let info = [];
+  let apremsIsChecked = false, matineesIsChecked = false;
 
   if((start <= end) == false){
     $('.invalid').show()
-    var element = document.getElementById('dateFin');
+    let element = document.getElementById('dateFin');
     element.classList.add('not-valid');
   }
 
@@ -258,7 +277,7 @@ function confirm_form_Demandeconge(){
     && (startHour =='Après-midi' && endHour == 'Après-midi')
   ){
     $('.isTheSame').show()
-    var element = document.getElementById('heureDebut');
+    let element = document.getElementById('heureDebut');
     element.classList.add('not-valid');
     element = document.getElementById('heureFin');
     element.classList.add('not-valid');
@@ -271,9 +290,17 @@ function confirm_form_Demandeconge(){
     $('#heureDebut').removeClass('not-valid');
     $('#heureFin').removeClass('not-valid');
 
-    let event = calendar.getEvents()[calendar.getEvents().length - 1];
+    
+    if($('#matinees:checked').length > 0){
+      matineesIsChecked = true;
+    }
+    if($('#apres-midis:checked').length > 0){
+      apremsIsChecked = true
+    }
 
-    let info = []
+    $('#matinees').prop( "checked", false );  
+    $('#apres-midis').prop( "checked", false );  
+
     $("form#form-demandeConge :input").each(function(){
       let info_id = 'V'+$(this)[0].id;
       let val = $(this).val() ;
@@ -281,7 +308,7 @@ function confirm_form_Demandeconge(){
     })
 
     let eventsToRemove = thisDateHasEvent(start,end,true);
-    EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event)
+    EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalDemandeConge',matineesIsChecked,apremsIsChecked)
   } 
 }
 
@@ -289,71 +316,47 @@ function confirm_form_Demandeconge(){
 function confirm_form_conge(){
   let start = new Date($('#CdateDebut').val());
   let end = new Date($('#CdateFin').val());
+  let startHour = $('#CheureDebut').val();
+  let endHour = $('#CheureFin').val();
 
-  if(start <= end == false){
+  if((start <= end) == false){
     $('.invalid').show()
     var element = document.getElementById('CdateFin');
     element.classList.add('not-valid');
   }
-  else if($('#CnbJours').val().length == 0){
-    $('.require').show()
-    var element = document.getElementById('CnbJours');
+
+  else if(
+    (moment(start).isSame(moment(end),'day')) 
+    && (startHour =='Après-midi' && endHour == 'Après-midi')
+  ){
+    $('.isTheSame').show()
+    var element = document.getElementById('CheureDebut');
+    element.classList.add('not-valid');
+    element = document.getElementById('CheureFin');
     element.classList.add('not-valid');
   }
-  else if($('#CnbJours').val() <= 0){
-    $('.notEqual0').show()
-    var element = document.getElementById('CnbJours');
-    element.classList.add('not-valid');
-  }
+
   else{
     $('.invalid').hide();
-    $('#CdateFin').removeClass('not-valid');
-    $('.require').hide();
-    $('#CnbJours').removeClass('not-valid');
-    $('.notEqual0').hide();
+    $('#dateFin').removeClass('not-valid');
+    $('.isTheSame').hide();
+    $('#CheureDebut').removeClass('not-valid');
+    $('#CheureFin').removeClass('not-valid');
 
     let event = calendar.getEvents()[calendar.getEvents().length - 1];
-    let startHour = $('#CheureDebut').val();
-    let endHour = $('#CheureFin').val();
+
     let info = []
-    if(startHour == 'Matin')
-      start.setHours(9,0,0,0);
-    else
-      start.setHours(13,0,0,0);
-    
-    if(endHour == 'Soir')
-      end.setHours(18,0,0,0);
-    else
-      end.setHours(12,0,0,0);
-
-    event.setDates(start,end);
-
     $("form#form-Conge :input").each(function(){
-      let info_id = 'V'+$(this)[0].id.slice(1);
+      let info_id = 'V'+$(this)[0].id;
       let val = $(this).val() ;
       info[info_id] = val;
     })
 
     let eventsToRemove = thisDateHasEvent(start,end,true);
-    
-    if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
-      eventsToRemove.forEach(eventToRemove => eventToRemove.remove());
-      demandeCongesInfo.push(info);
-    }
-
-    else{
-      $('#alertD').show();
-      setTimeout(function(){
-        $('#alertD').fadeOut(3000);
-      },5000)
-      setTimeout(function(){
-        $('#eventReceive').val().remove();
-      },10);
-    }
-
-    $('#modalConge').modal('hide');
-  }
+    EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalConge')
+  } 
 }
+
 // --------- Annulation d'un Congé --------- //
 function cancelDemandeConge(event){
   $('#modalDemandeConge').modal('hide');
@@ -372,24 +375,29 @@ function cancelDemandeConge(event){
 
 // --------- Validation d'une Demande Congé --------- //
 function validation_demande_conge(event){
+    console.log(event)
     let newEvent = {
       title:"Congé",
       start:event.start,
       end:event.end,
       classNames:'conge',
+      extendedProps: {'ID':event.extendedProps.ID}
     }
-    allEvents = calendar.getEvents().sort( (a,b) => moment(a.start).dayOfYear() - moment(b.start).dayOfYear());
+    let allEvents = calendar.getEvents().sort( (a,b) => moment(a.start).dayOfYear() - moment(b.start).dayOfYear());
     let index = allEvents.findIndex(Event => moment(Event.start).isSame(moment(event.start),'day'))
+
     if(allEvents[index + 2].classNames[0] == 'specialDemandeConge'){
       let specialConge = {
         title:"Congé",
         start: allEvents[index + 2].start,
         end: allEvents[index + 2].end,
-        classNames:'specialConge',
+        classNames:'specialconge',
+        extendedProps: {'ID':event.extendedProps.ID}
       }
       allEvents[index + 2].remove();
       calendar.addEvent(specialConge);
     }
+
     calendar.addEvent(newEvent);
     event.remove();
     $('#modalValidationConge').modal('hide'); 
@@ -521,7 +529,7 @@ function createDateArray(start,end){
 }
 
 
-// --------- Ajout dynamique de l'évenement Présence + Weekend--------- //
+// --------- Ajout dynamique de l'évenement Présence + Weekend --------- //
 function CreateEventPresence(){
   let view = calendar.view;
   let event = [];
@@ -552,7 +560,8 @@ function CreateEventPresence(){
   })
 }
 
-function displayErrorDemandeConge(){
+// --------- display Erreur--------- //
+function displayError(){
   $('#alertD').show();
   $('#modalDemandeConge').modal('hide');
   setTimeout(function(){
@@ -563,6 +572,7 @@ function displayErrorDemandeConge(){
   },10);
 }
 
+// --------- Ajout d'un évenement present qui prend une demi journée --------- //
 function addEventPresentIfMidDay(start,end,event){
   let _ID = event.extendedProps.ID;
   let eventPresent;
@@ -595,8 +605,44 @@ function addEventPresentIfMidDay(start,end,event){
   calendar.addEvent(eventPresent);
 }
 
+function ifAllMorningOrAprem(start,end,matineesIsChecked,apremsIsChecked,event){
+  let _ID = event.extendedProps.ID;
+  let eventPresent;
+  let dates = createDateArray(start,end)
+
+  if(matineesIsChecked){
+    dates.forEach(d => {
+      eventPresent = 
+      {
+        classNames: 'specialPresent',
+        title: "Present(e)",
+        start: d.setHours(13,0,0,0),
+        end: d.setHours(18,0,0,0),
+        extendedProps: {'ID':_ID},
+      }
+      calendar.addEvent(eventPresent)
+    })
+  }
+  else if(apremsIsChecked){
+    dates.forEach(d => {
+      eventPresent = 
+      {
+        classNames: 'specialPresent',
+        title: "Present(e)",
+        start: d.setHours(9,0,0,0),
+        end: d.setHours(12,0,0,0),
+        extendedProps: {'ID':_ID},
+      }
+    })
+    calendar.addEvent(eventPresent)
+  }
+}
+
+// --------- Ajout d'évenements present d'une demi journée ainsi que d'un demandeDeConge special --------- //
 function specialAddEventPresentIfMidDay(start,end,event){
   let _ID = event.extendedProps.ID;
+  let _classNames = event.classNames[0];
+  let title = event.title;
   let nbrOfDays = moment(end).dayOfYear() - moment(start).dayOfYear();
   let dtLeft = event.start
   let dtRight = new Date(end);
@@ -612,17 +658,16 @@ function specialAddEventPresentIfMidDay(start,end,event){
     extendedProps: {'ID':_ID},
   }
   eventSplitLeft = {
-    title:'Demande de Congé',
+    title:title,
     start:start,
     end:dtLeft,
-    classNames:'demandeConge',
+    classNames:_classNames,
     extendedProps: {'ID':_ID},
   }
   eventSplitRight = {
-    title:'test2',
     start:new Date(end.setHours(9,0,0,0)),
     end:dtRight,
-    classNames:'specialDemandeConge',
+    classNames:'special'+_classNames,
     extendedProps: {'ID':_ID},
   }
   eventPresent2 = {
@@ -640,13 +685,14 @@ function specialAddEventPresentIfMidDay(start,end,event){
   calendar.addEvent(eventPresent2);
 }
 
-function setHoursOfEvent(startHour,endHour,start,end,event){
-  if(startHour == 'Matin')
+// --------- permet de modifier l'heure de départ et de fin d'un évenement --------- //
+function setHoursOfEvent(startHour,endHour,start,end,event,matineesIsChecked = false,apremsIsChecked = false){
+  if(startHour == 'Matin' || matineesIsChecked)
     start.setHours(9,0,0,0);
   else
     start.setHours(13,0,0,0);
 
-  if(endHour == 'Soir')
+  if(endHour == 'Soir' || apremsIsChecked)
     end.setHours(18,0,0,0);
   else
     end.setHours(12,0,0,0);
@@ -654,7 +700,8 @@ function setHoursOfEvent(startHour,endHour,start,end,event){
   event.setDates(start,end); 
 }
 
-function EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event){
+// --------- Gère tout ce qu'il faut lors de la création d'un nouvel évènement  --------- //
+function EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,modal,matineesIsChecked,apremsIsChecked){
   if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
     event.setExtendedProp('ID',ID());
     eventsToRemove.forEach(eventToRemove => eventToRemove.remove());
@@ -672,7 +719,11 @@ function EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event){
     }
     else{
       setHoursOfEvent(startHour,endHour,start,end,event);
-      if(startHour == 'Après-midi' && endHour == 'Après-midi'){
+      if(matineesIsChecked || apremsIsChecked){
+        setHoursOfEvent(startHour,endHour,start,end,event,matineesIsChecked,apremsIsChecked);
+        ifAllMorningOrAprem(event.start,event.end,matineesIsChecked,apremsIsChecked,event)
+      }
+      else if(startHour == 'Après-midi' && endHour == 'Après-midi'){
         specialAddEventPresentIfMidDay(event.start,event.end,event);
       }
       else if(startHour == 'Après-midi'){
@@ -681,21 +732,27 @@ function EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event){
       else if(endHour == 'Après-midi')
         addEventPresentIfMidDay(event.end,event.end,event);
     }
-    $('#modalDemandeConge').modal('hide');   
+    $(modal).modal('hide');   
   }
   else{
-    displayErrorDemandeConge();
+    displayError();
   }  
 }
 
+// --------- Supprimer un évènement autre que present --------- //
 function deleteEvent(eventRightClicked){
-  let _ID = eventRightClicked.extendedProps.ID
-  let eventsToRemove = calendar.getEvents().filter(e => e.extendedProps.ID == _ID)
+  let _ID = eventRightClicked.extendedProps.ID;
   let dates;
+  if(eventRightClicked.classNames!='demandeConge' && eventRightClicked.classNames!='conge')
+    eventRightClicked.setEnd(eventRightClicked.end.setDate(eventRightClicked.end.getDate()-1))
+  let eventsToRemove = calendar.getEvents().filter(e => e.extendedProps.ID == _ID);
+
   if(eventsToRemove.length == 2 && eventsToRemove[0].classNames[0] == 'demandeConge')
-    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end)
+    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end);
+  else if (eventsToRemove.length == 1 && !moment(eventsToRemove[0].start).isSame(moment(eventsToRemove[0].end),'day'))
+    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end);
   else
-    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[eventsToRemove.length -1].start)
+    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[eventsToRemove.length -1].start);
 
   eventsToRemove.forEach(e => e.remove())
   dates.forEach(d => {
@@ -704,12 +761,55 @@ function deleteEvent(eventRightClicked){
       title: "Present(e)",
       start: d,
       allDay: true,
-    }
-    calendar.addEvent(event)
+    };
+    calendar.addEvent(event);
   }) 
 
-  $('#modalDelete').modal('hide')
+  $('#modalDelete').modal('hide');
 }
 
+// $(document).ready(function(){
+//   $('#dateDebut').change(function(){
+//     let dd = moment($('#dateDebut').val());
+//     let df = moment($('#dateFin').val());
+//     if(dd.isBefore(df)){
+//       $('#matinees').attr("disabled", false);
+//       $('#apres-midis').attr("disabled",false);
+//     }
+//     else if(dd.isSame(df)){
+//       $('#matinees').attr("disabled", true);
+//       $('#apres-midis').attr("disabled",true);
+//     }
+//     else if(dd.isAfter(df)){
+//       $('#matinees').attr("disabled", true);
+//       $('#apres-midis').attr("disabled",true);
+//     }
+//   })
 
+//   $('#dateFin').change(function(){
+//     let dd = moment($('#dateDebut').val());
+//     let df = moment($('#dateFin').val());
+//     if(dd.isBefore(df)){
+//       $('#matinees').attr("disabled", false);
+//       $('#apres-midis').attr("disabled",false);
+//     }
+//     else if(dd.isSame(df)){
+//       $('#matinees').attr("disabled", true);
+//       $('#apres-midis').attr("disabled",true);
+//     }
+//     else if(dd.isAfter(df)){
+//       $('#matinees').attr("disabled", true);
+//       $('#apres-midis').removeAttribute("disabled",true);
+//     }
+//   })
+
+//   $('#matinees').change(function(){
+//     $('#apres-midis').prop( "checked", false );   
+//   })
+
+//   $('#apres-midis').change(function(){
+//     $('#matinees').prop( "checked", false );
+//   })
+
+// })
 

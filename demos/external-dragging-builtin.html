@@ -54,7 +54,7 @@
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title" id="modalCongeLabel">Ajouter un Congé</h5>
-            <button type="button" class="close" data-dismiss="modal" onclick="cancelDemandeConge($('#eventReceive').val())">
+            <button type="button" class="close" data-dismiss="modal" onclick="cancel($('#eventReceive').val())">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
@@ -107,6 +107,20 @@
                 l'heure de début ne peut être la même que celle de fin
               </div>
 
+              <div class="form-group row">
+                <div class="col-sm-6">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="matinees" value="matinees" disabled>
+                    <label class="form-check-label" for="matinees">Poser uniquement des matinées</label>
+                  </div>
+                </div>
+                <div class="col-sm-6">
+                  <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="apres-midis" value="apres-midis" disabled>
+                    <label class="form-check-label" for="apres-midis">Poser uniquement des après-midi</label>
+                  </div>
+                </div>
+              </div>
               <!-- <div class="form-group row">
                 <label for="nbJours" class="col-sm-4">Nombre de jours</label>
                 <div class="col-sm-8">
@@ -149,7 +163,7 @@
           </div>
 
           <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" onclick="cancelDemandeConge($('#eventReceive').val())">Annuler</button>
+            <button type="button" class="btn btn-secondary" onclick="cancel($('#eventReceive').val())">Annuler</button>
             <button type="button" class="btn btn-primary" type="submit" onclick="confirm_form_Demandeconge()">Valider</button>
           </div>
         </div>
@@ -294,7 +308,7 @@
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="modalCongeLabel">Ajouter un Congé</h5>
-              <button type="button" class="close" data-dismiss="modal" onclick="cancelDemandeConge($('#eventReceive').val())">
+              <button type="button" class="close" data-dismiss="modal" onclick="cancel($('#eventReceive').val())">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>
@@ -332,28 +346,15 @@
                     <label for="CheureDebut">Heure de début</label>
                     <select class="custom-select" id="CheureDebut">
                       <option selected value="Matin">Matin</option>
-                      <option value="Soir">Après-midi</option>
+                      <option value="Après-midi">Après-midi</option>
                     </select>
                   </div>
                   <div class="col-sm-6">
                     <label for="CheureFin">Heure de fin</label>              
                     <select class="custom-select" id="CheureFin">
                       <option selected value="Soir">Soir</option>
-                      <option value="1" value="Matin">Après-midi</option>
+                      <option value="Après-midi">Après-midi</option>
                     </select>
-                  </div>
-                </div>
-  
-                <div class="form-group row">
-                  <label for="CnbJours" class="col-sm-4">Nombre de jours</label>
-                  <div class="col-sm-8">
-                    <input type="number" class="form-control" id="CnbJours" min="1">
-                    <div class="require" style="display: none">
-                        Ce champ doit être rempli
-                    </div>
-                    <div class="notEqual0" style="display: none">
-                        Vous ne pouvez pas mettre une valeur inférieur à 1
-                    </div>
                   </div>
                 </div>
   
@@ -367,7 +368,7 @@
             </div>
   
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" onclick="cancelDemandeConge($('#eventReceive').val())">Annuler</button>
+              <button type="button" class="btn btn-secondary" onclick="cancel($('#eventReceive').val())">Annuler</button>
               <button type="button" class="btn btn-primary" onclick="confirm_form_conge()">Valider</button>
             </div>
           </div>
@@ -380,7 +381,7 @@
           <div class="modal-content">
             <div class="modal-header">
               <h5 class="modal-title" id="modalAbsenceLabel">Ajouter une Absence</h5>
-              <button type="button" class="close" data-dismiss="modal" onclick="cancelDemandeConge($('#eventReceive').val())">
+              <button type="button" class="close" data-dismiss="modal" onclick="cancel($('#eventReceive').val())">
                 <span aria-hidden="true">&times;</span>
               </button>
             </div>

@@ -40,19 +40,19 @@ body {
     background-color: #52c76d !important;
 }
 
-.demandeConge, #demandeConge,.specialDemandeConge{
+.demandeConge, #demandeConge,.specialdemandeConge{
     background-color: #ca75cc !important;
 }
 
-.specialDemandeConge{
+.specialdemandeConge{
     color: #ca75cc !important;
 }
 
-.conge, #conge, .specialConge{
+.conge, #conge, .specialconge{
     background-color: #d27a20 !important;
 }
 
-.specialConge{
+.specialconge{
     color:#d27a20 !important;
 }
 
