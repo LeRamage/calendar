@@ -36,16 +36,24 @@ body {
     transform: translate(-50%, -50%);
 }
 
-.present, #present{
+.present, #present,.specialPresent{
     background-color: #52c76d !important;
 }
 
-.demandeConge, #demandeConge{
+.demandeConge, #demandeConge,.specialDemandeConge{
     background-color: #ca75cc !important;
 }
 
-.conge, #conge{
+.specialDemandeConge{
+    color: #ca75cc !important;
+}
+
+.conge, #conge, .specialConge{
     background-color: #d27a20 !important;
+}
+
+.specialConge{
+    color:#d27a20 !important;
 }
 
 .absence, #absence{
@@ -94,7 +102,7 @@ body {
 .not-valid{
     border:#dc3545 solid 1px !important;
 }
-.invalid, .require,.notEqual0{
+.invalid,.isTheSame{
     color:#dc3545;
 }
 

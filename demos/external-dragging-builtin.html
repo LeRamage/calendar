@@ -31,6 +31,7 @@
     <!-- -------- Stockage event ---------- -->
   <div id='eventClicked' style="display:none"></div>  
   <div id='eventReceive' style='display: none'></div>
+  <div id='eventRightClicked' style="display: none"></div>
 
   <!-- -------- Evenements Exterieur ---------- -->
   <div id='external-events'>
@@ -91,16 +92,19 @@
                   <label for="heureDebut">Heure de début</label>
                   <select class="custom-select" id="heureDebut">
                     <option selected value="Matin">Matin</option>
-                    <option value="Soir">Après-midi</option>
+                    <option value="Après-midi">Après-midi</option>
                   </select>
                 </div>
                 <div class="col-sm-6">
                   <label for="heureFin">Heure de fin</label>              
                   <select class="custom-select" id="heureFin">
                     <option selected value="Soir">Soir</option>
-                    <option value="Matin">Après-midi</option>
+                    <option value="Après-midi">Après-midi</option>
                   </select>
                 </div>
+              </div>
+              <div class="isTheSame" style="display: none">
+                l'heure de début ne peut être la même que celle de fin
               </div>
 
               <!-- <div class="form-group row">
@@ -411,6 +415,28 @@
     <!-- -------- Modal 7 Télétravail ---------- -->
 
     <!-- -------- Modal 8 Formation ---------- -->
+    
+    <!-- -------- Modal 9 Supprimer l'évenement ---------- -->
+    <div class="modal" tabindex="-1" role="dialog" id='modalDelete'>
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Supprimer le/les évenement(s)</h5>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <p>Cette action supprimera tous les évenements présents à cette/ces date(s)!</p> 
+            <p>Voulez-vous continuer?</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-dismiss="modal">Annuler</button>
+            <button type="button" class="btn btn-primary" onclick="deleteEvent($('#eventRightClicked').val())">Valider</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- -------- Calendrier ---------- -->
     <div id='calendar'></div>

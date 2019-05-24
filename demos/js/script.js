@@ -52,11 +52,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if(eventClassNames == 'demandeConge'){
         demandeCongesInfo.forEach(function(conge){
           dateConge = new Date(conge["VdateDebut"]);
-          if(moment(dateConge).dayOfYear() == moment(e.event.start).dayOfYear())
+          if(moment(dateConge).isSame(moment(e.event.start),'day')){
             Object.keys(conge).forEach(function(element){
               $('#'+element).val(conge[element]);
             })
-            return;
+            return; // ?
+          }
         }) 
         $('#modalValidationConge').modal('show')
       }
@@ -64,11 +65,12 @@ document.addEventListener('DOMContentLoaded', function() {
       else if(eventClassNames == 'conge'){
         demandeCongesInfo.forEach(function(conge){
           dateConge = new Date(conge["VdateDebut"]);
-          if(moment(dateConge).dayOfYear() == moment(e.event.start).dayOfYear())
+          if(moment(dateConge).isSame(moment(e.event.start),'day')){
             Object.keys(conge).forEach(function(element){
               $('#I'+element.slice(1)).val(conge[element]);
             })
-            return;
+            return; // ?
+          }
         })
         $('#modalInfoConge').modal('show')
       }
@@ -80,15 +82,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     drop: function(arg) {  
       let Cid = arg.draggedEl.id;
-      // let allEvents = calendar.getEvents();
-      // let eventAtDropPlace = []
-      // allEvents.find(function(event){
-      //   if(moment(event.start).dayOfYear() == moment(arg.date).dayOfYear())
-      //     eventAtDropPlace.push(event)
-        // if(moment(event.start).dayOfYear() != moment(event.end).dayOfYear())
-        //   if(moment(event.end).dayOfYear() == moment(arg.date).dayOfYear())
-        //     eventAtDropPlace.push(event)
-      // })
       
       if(Cid == 'demandeConge'){
         start = arg.date;
@@ -123,11 +116,8 @@ document.addEventListener('DOMContentLoaded', function() {
       else{
         start = new Date(arg["dateStr"]);
         let eventsToRemove = thisDateHasEvent(start,start);
-        if(eventsToRemove.length>0 && eventsToRemove[0]!=true){
-          eventsToRemove.forEach(function(eventToRemove){
-            eventToRemove.remove();
-          })
-        }
+        if(eventsToRemove.length>0 && eventsToRemove[0]!=true)
+          eventsToRemove.forEach(eventToRemove => eventToRemove.remove());
         else{
           setTimeout(function(){
             $('#eventReceive').val().remove();
@@ -136,26 +126,58 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     },
     
-    eventRender: function(event) {         
+    eventRender: function(event) {        
       let element = $(event.el);
-      element.css('border','none'); 
+      element.css('border','none');
+      
+      if(event.event.classNames[0] != 'present' && event.event.classNames[0] != 'ferie_WE' && event.event.classNames[0] != 'specialPresent'){
+        element[0].children[0].addEventListener('contextmenu', function(ev){
+          ev.preventDefault();
+          $('#eventRightClicked').val(event.event)
+          $('#modalDelete').modal('show');
+          return false;
+        }, false);
+      }
+
+      // Changer le Titre lorsque l'événement s'étale sur plusieurs jours
+      if(event.event.classNames =='demandeConge' || event.event.classNames == 'conge'){
+        if(moment(event.event.start).isBefore(moment(event.event.end),'day')){
+          let nbrOfDays =  moment(event.event.end).dayOfYear() - moment(event.event.start).dayOfYear()
+          if(moment(event.event.end).hour() == 12 && moment(event.event.start).hour() == 9){
+            let str = nbrOfDays.toString()+' jour(s) et demi'
+            element[0].children[0].children[0].innerText = str
+          }
+          else if(moment(event.event.end).hour() == 12 && moment(event.event.start).hour() == 13){
+            let str = nbrOfDays.toString()+' jour(s)'
+            element[0].children[0].children[0].innerText = str
+          }
+          else if(moment(event.event.end).hour() == 18 && moment(event.event.start).hour() == 13){
+            let str = nbrOfDays.toString()+' jour(s) et demi'
+            element[0].children[0].children[0].innerText = str
+          }  
+          else{
+            let str = (nbrOfDays+1).toString()+' jours complet'
+            element[0].children[0].children[0].innerText = str
+          } 
+        }
+      }
     },
 
     eventDrop: function(e){
-      if(e.event.classNames[0] == 'demandeConge' || e.event.classNames[0] == 'conge' || e.event.classNames[0] == 'congeDeny'){
+      if(e.event.classNames[0] == 'demandeConge' || e.event.classNames[0] == 'conge' || e.event.classNames[0] == 'congeDeny' || e.event.classNames[0] == 'specialPresent'){
         e.event.remove();
         calendar.addEvent(e.oldEvent);
       }
       else{
         let oldEvent = e.oldEvent;
-        let indexOfEvent = calendar.getEvents().findIndex(function(event){
-          return event._instance.instanceId === e.event._instance.instanceId;
-        })
-  
+        let indexOfEvent = calendar.getEvents().findIndex(event => event._instance.instanceId === e.event._instance.instanceId)
+        console.log('test');
         if(e.event.end === null){
           let eventToReplace = constrainDrop(e.event.start,e.event.start);
-          if(eventToReplace[0] != true)
+          if(eventToReplace[0] != true){
             eventToReplace[0].setDates(oldEvent.start,oldEvent.start);
+            eventToReplace[0].setAllDay(true);
+          }
           else{
             e.event.remove();
             calendar.addEvent(oldEvent);
@@ -174,6 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
             let iterator = 0;
             eventsToReplace.forEach(function(event){
               event.setDates(datesToReplace[iterator],datesToReplace[iterator]);
+              event.setAllDay(true);
               iterator++;
             })
           }
@@ -185,9 +208,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if(e.endDelta.days > 0){
         let eventsToRemove = constrainResize(e.endDelta.days,e.event.start);
         if(eventsToRemove[eventsToRemove.length - 1] != true){
-          eventsToRemove.forEach(function(event){
-            event.remove();
-          })
+          eventsToRemove.forEach(event => event.remove())
         }
         else{
           setTimeout(function(){
@@ -205,6 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
               classNames: 'present',
               title: "Present(e)",
               start: moment(e.prevEvent.end).subtract(i, "days")._d,
+              allDay: true,
             }
           ]
           calendar.addEventSource(event)
@@ -222,90 +244,44 @@ function confirm_form_Demandeconge(){
 
   let start = new Date($('#dateDebut').val());
   let end = new Date($('#dateFin').val());
+  let startHour = $('#heureDebut').val();
+  let endHour = $('#heureFin').val();
 
-  if(start <= end == false){
+  if((start <= end) == false){
     $('.invalid').show()
     var element = document.getElementById('dateFin');
     element.classList.add('not-valid');
   }
-  // else if($('#nbJours').val().length == 0){
-  //   $('.require').show()
-  //   var element = document.getElementById('nbJours');
-  //   element.classList.add('not-valid');
-  // }
-  // else if($('#nbJours').val() <= 0){
-  //   $('.notEqual0').show()
-  //   var element = document.getElementById('nbJours');
-  //   element.classList.add('not-valid');
-  // }
+
+  else if(
+    (moment(start).isSame(moment(end),'day')) 
+    && (startHour =='Après-midi' && endHour == 'Après-midi')
+  ){
+    $('.isTheSame').show()
+    var element = document.getElementById('heureDebut');
+    element.classList.add('not-valid');
+    element = document.getElementById('heureFin');
+    element.classList.add('not-valid');
+  }
+
   else{
     $('.invalid').hide();
     $('#dateFin').removeClass('not-valid');
-    $('.require').hide();
-    // $('#nbJours').removeClass('not-valid');
-    // $('.notEqual0').hide();
+    $('.isTheSame').hide();
+    $('#heureDebut').removeClass('not-valid');
+    $('#heureFin').removeClass('not-valid');
 
     let event = calendar.getEvents()[calendar.getEvents().length - 1];
-    let startHour = $('#heureDebut').val();
-    let endHour = $('#heureFin').val();
+
     let info = []
-    if(startHour == 'Matin')
-      start.setHours(9,0,0,0);
-    else
-      start.setHours(13,0,0,0);
-    
-    if(endHour == 'Soir')
-      end.setHours(18,0,0,0);
-    else
-      end.setHours(12,0,0,0);
-
-    event.setDates(start,end); 
-
     $("form#form-demandeConge :input").each(function(){
       let info_id = 'V'+$(this)[0].id;
       let val = $(this).val() ;
       info[info_id] = val;
     })
+
     let eventsToRemove = thisDateHasEvent(start,end,true);
-    if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
-      eventsToRemove.forEach(function(eventToRemove){
-        eventToRemove.remove();
-      })
-      demandeCongesInfo.push(info);
-          let eventPresent;
-    if(moment(start).hour() == 13){
-      startPresent = start
-      endPresent = end
-      startPresent.setHours(9,0,0,0)
-      endPresent.setHours(12,0,0,0)
-      eventPresent = 
-        {
-          classNames: 'present',
-          title: "Present(e)",
-          start: startPresent,
-          end: endPresent,
-        }
-    }
-    else if(moment(end).hour() == 12){
-      startPresent = start
-      endPresent = end
-      startPresent.setHours(13,0,0,0);
-      endPresent.setHours(18,0,0,0);
-      eventPresent = 
-        {
-          classNames: 'present',
-          title: "Present(e)",
-          start: startPresent,
-          end: endPresent,
-        }
-    }
-    
-    calendar.addEvent(eventPresent);
-      $('#modalDemandeConge').modal('hide');   
-    }
-    else{
-      displayErrorDemandeConge();
-    }
+    EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event)
   } 
 }
 
@@ -361,9 +337,7 @@ function confirm_form_conge(){
     let eventsToRemove = thisDateHasEvent(start,end,true);
     
     if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
-      eventsToRemove.forEach(function(eventToRemove){
-        eventToRemove.remove();
-      })
+      eventsToRemove.forEach(eventToRemove => eventToRemove.remove());
       demandeCongesInfo.push(info);
     }
 
@@ -403,7 +377,18 @@ function validation_demande_conge(event){
       start:event.start,
       end:event.end,
       classNames:'conge',
-      id: ID(),
+    }
+    allEvents = calendar.getEvents().sort( (a,b) => moment(a.start).dayOfYear() - moment(b.start).dayOfYear());
+    let index = allEvents.findIndex(Event => moment(Event.start).isSame(moment(event.start),'day'))
+    if(allEvents[index + 2].classNames[0] == 'specialDemandeConge'){
+      let specialConge = {
+        title:"Congé",
+        start: allEvents[index + 2].start,
+        end: allEvents[index + 2].end,
+        classNames:'specialConge',
+      }
+      allEvents[index + 2].remove();
+      calendar.addEvent(specialConge);
     }
     calendar.addEvent(newEvent);
     event.remove();
@@ -417,7 +402,6 @@ function denyDemandeConge(event){
     start:event.start,
     end:event.end,
     classNames:'congeDeny',
-    id: ID(),
   }
   calendar.addEvent(newEvent);
   event.remove();
@@ -434,9 +418,9 @@ function thisDateHasEvent(start,end,isTrue = false){
   let daysToCheck = createDateArray(start,end);
   let eventsToRemove = [];
 
-  if(moment(start).dayOfYear() === moment(end).dayOfYear()){ // External Event = 1 journée
+  if(moment(start).isSame(moment(end),'day')){ // External Event = 1 journée
     allEvents.some(function(event){
-      if(moment(event.start).dayOfYear() === moment(start).dayOfYear()){
+      if(moment(event.start).isSame(moment(start),'day')){
         if(event.classNames[0] == 'present')
           eventsToRemove.push(event);
         else
@@ -447,10 +431,7 @@ function thisDateHasEvent(start,end,isTrue = false){
 
   else{ // External Event = plrs journées
     allEvents.some(function(event){ 
-      if(daysToCheck.find(function(date){
-        return moment(date).dayOfYear() === moment(event.start).dayOfYear();
-      })){
-        console.log(event.classNames[0]);
+      if(daysToCheck.find(date => moment(date).isSame(moment(event.start),'day'))){
         if(event.classNames[0] == 'present' || event.classNames[0] == 'ferie_WE')
           eventsToRemove.push(event);
         else{
@@ -473,10 +454,8 @@ function constrainDrop(start,end,indexOE = null){
   if(indexOE != null)
     allEvents.splice(indexOE,1)
   
-  if(moment(start).dayOfYear() === moment(end).dayOfYear()){
-    index = allEvents.findIndex(function(event){
-      return moment(event.start).dayOfYear() === moment(start).dayOfYear();
-    })
+  if(moment(start).isSame(moment(end),'day')){
+    index = allEvents.findIndex(event => moment(event.start).isSame(moment(start),'day'))
     if(allEvents[index].classNames[0] == 'present')
       eventsToReplace.push(allEvents[index]);
     else
@@ -487,9 +466,7 @@ function constrainDrop(start,end,indexOE = null){
     end = moment(end).subtract(1, "days")._d;
     let dates = createDateArray(start,end)
     allEvents.findIndex(function(event){
-      if(dates.find(function(date){
-        return moment(date).dayOfYear() === moment(event.start).dayOfYear();
-      })){
+      if(dates.find(date => moment(date).isSame(moment(event.start),'day'))){
         if(event.classNames[0] == "present")
           eventsToReplace.push(event)
         else  
@@ -505,14 +482,10 @@ function constrainResize(days,start){
   let allEvents = calendar.getEvents();
   let eventsToRemove = [];
 
-  allEvents.sort(function(a,b){
-    return moment(a.start).dayOfYear() - moment(b.start).dayOfYear();
-  })
+  allEvents.sort((a,b) => moment(a.start).dayOfYear() - moment(b.start).dayOfYear())
 
   if(days > 0){
-    index = allEvents.findIndex(function(event){
-      return moment(event.start).dayOfYear() === moment(start).dayOfYear();
-    })  
+    index = allEvents.findIndex(event => moment(event.start).isSame(moment(start),'day'))  
     for(i = 1; i <= days;i++){
       if(allEvents[index+i].classNames[0] === 'present')
         eventsToRemove.push(allEvents[index+i]);
@@ -589,4 +562,154 @@ function displayErrorDemandeConge(){
     $('#eventReceive').val().remove();
   },10);
 }
+
+function addEventPresentIfMidDay(start,end,event){
+  let _ID = event.extendedProps.ID;
+  let eventPresent;
+  let startPresent = start
+  let endPresent = end
+  if(moment(start).hour() == 13){    
+    startPresent.setHours(9,0,0,0)
+    endPresent.setHours(12,0,0,0)
+    eventPresent = 
+      {
+        classNames: 'specialPresent',
+        title: "Present(e)",
+        start: startPresent,
+        end: endPresent,
+        extendedProps: {'ID':_ID},
+      }
+  }
+  else if(moment(end).hour() == 12){
+    startPresent.setHours(13,0,0,0);
+    endPresent.setHours(18,0,0,0);
+    eventPresent = 
+      {
+        classNames: 'specialPresent',
+        title: "Present(e)",
+        start: startPresent,
+        end: endPresent,
+        extendedProps: {'ID':_ID},
+      }
+  }
+  calendar.addEvent(eventPresent);
+}
+
+function specialAddEventPresentIfMidDay(start,end,event){
+  let _ID = event.extendedProps.ID;
+  let nbrOfDays = moment(end).dayOfYear() - moment(start).dayOfYear();
+  let dtLeft = event.start
+  let dtRight = new Date(end);
+  
+  dtLeft = new Date(dtLeft.setDate(dtLeft.getDate() + nbrOfDays - 1));
+  dtLeft.setHours(18,0,0,0);
+
+  eventPresent1 = {
+    classNames: 'specialPresent',
+    title: "Present(e)",
+    start: new Date(start.setHours(9,0,0,0)),
+    end: new Date(start.setHours(12,0,0,0)),
+    extendedProps: {'ID':_ID},
+  }
+  eventSplitLeft = {
+    title:'Demande de Congé',
+    start:start,
+    end:dtLeft,
+    classNames:'demandeConge',
+    extendedProps: {'ID':_ID},
+  }
+  eventSplitRight = {
+    title:'test2',
+    start:new Date(end.setHours(9,0,0,0)),
+    end:dtRight,
+    classNames:'specialDemandeConge',
+    extendedProps: {'ID':_ID},
+  }
+  eventPresent2 = {
+    classNames: 'specialPresent',
+    title: "Present(e)",
+    start: end.setHours(13,0,0,0),
+    end: end.setHours(18,0,0,0),
+    extendedProps: {'ID':_ID},
+  }
+
+  event.remove()
+  calendar.addEvent(eventSplitLeft);
+  calendar.addEvent(eventSplitRight);
+  calendar.addEvent(eventPresent1);
+  calendar.addEvent(eventPresent2);
+}
+
+function setHoursOfEvent(startHour,endHour,start,end,event){
+  if(startHour == 'Matin')
+    start.setHours(9,0,0,0);
+  else
+    start.setHours(13,0,0,0);
+
+  if(endHour == 'Soir')
+    end.setHours(18,0,0,0);
+  else
+    end.setHours(12,0,0,0);
+
+  event.setDates(start,end); 
+}
+
+function EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event){
+  if(eventsToRemove.length>0 && eventsToRemove[eventsToRemove.length-1] != true){
+    event.setExtendedProp('ID',ID());
+    eventsToRemove.forEach(eventToRemove => eventToRemove.remove());
+    demandeCongesInfo.push(info);
+    if(moment(start).isSame(moment(end),'day')){
+      if(startHour=='Matin' && endHour=='Soir'){
+        start.setHours(9,0,0,0);
+        end.setHours(18,0,0,0);
+        event.setDates(start,end); 
+      }
+      else{
+        setHoursOfEvent(startHour,endHour,start,end,event);
+        addEventPresentIfMidDay(start,end,event);
+      }
+    }
+    else{
+      setHoursOfEvent(startHour,endHour,start,end,event);
+      if(startHour == 'Après-midi' && endHour == 'Après-midi'){
+        specialAddEventPresentIfMidDay(event.start,event.end,event);
+      }
+      else if(startHour == 'Après-midi'){
+        addEventPresentIfMidDay(event.start,event.start,event);
+      }
+      else if(endHour == 'Après-midi')
+        addEventPresentIfMidDay(event.end,event.end,event);
+    }
+    $('#modalDemandeConge').modal('hide');   
+  }
+  else{
+    displayErrorDemandeConge();
+  }  
+}
+
+function deleteEvent(eventRightClicked){
+  let _ID = eventRightClicked.extendedProps.ID
+  let eventsToRemove = calendar.getEvents().filter(e => e.extendedProps.ID == _ID)
+  let dates;
+  if(eventsToRemove.length == 2 && eventsToRemove[0].classNames[0] == 'demandeConge')
+    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end)
+  else
+    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[eventsToRemove.length -1].start)
+
+  eventsToRemove.forEach(e => e.remove())
+  dates.forEach(d => {
+    event = {
+      classNames: 'present',
+      title: "Present(e)",
+      start: d,
+      allDay: true,
+    }
+    calendar.addEvent(event)
+  }) 
+
+  $('#modalDelete').modal('hide')
+}
+
+
 
