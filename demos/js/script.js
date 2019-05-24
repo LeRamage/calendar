@@ -299,7 +299,9 @@ function confirm_form_Demandeconge(){
     }
 
     $('#matinees').prop( "checked", false );  
-    $('#apres-midis').prop( "checked", false );  
+    $('#apres-midis').prop( "checked", false );
+    $('#matinees').attr("disabled", true);
+    $('#apres-midis').attr("disabled",true);  
 
     $("form#form-demandeConge :input").each(function(){
       let info_id = 'V'+$(this)[0].id;
