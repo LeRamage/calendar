@@ -6,6 +6,7 @@ function confirm_form_Demandeconge(){
     let startHour = $('#heureDebut').val();
     let endHour = $('#heureFin').val();
     let event = calendar.getEvents()[calendar.getEvents().length - 1];
+    console.log(event.getResources())
     let info = [];
     let apremsIsChecked = false, matineesIsChecked = false;
   
@@ -53,7 +54,8 @@ function confirm_form_Demandeconge(){
       })
   
       let eventsToRemove = thisDateHasEvent(start,end,true);
-      EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalDemandeConge',matineesIsChecked,apremsIsChecked)
+      EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalDemandeConge',matineesIsChecked,apremsIsChecked);
+      
     } 
   }
   
@@ -89,7 +91,6 @@ function confirm_form_Demandeconge(){
       $('#CheureFin').removeClass('not-valid');
   
       let event = calendar.getEvents()[calendar.getEvents().length - 1];
-  
       let info = []
       $("form#form-Conge :input").each(function(){
         let info_id = 'V'+$(this)[0].id;

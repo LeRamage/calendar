@@ -19,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
           title: eventEl.innerText.trim(),
           classNames:_id,
           id:_id,
+          resourceId:'emp1'
         }
       });
     });
@@ -29,14 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
 
     calendar = new Calendar(calendarEl, {
-    plugins: [ 'interaction', 'dayGrid', 'timeGrid', 'list' ],
+    plugins: [ 'resourceTimeGrid','interaction'],
 
-    header: {
-      left: 'prev,next today',
-      center: 'title',
-      right: 'dayGridMonth,timeGridWeek,timeGridDay,listWeek'
-    },
+    defaultView: 'resourceTimeGridFiveDay',
+    datesAboveResources: true,
     
+    timezone : 'local',
     locale: 'fr',
     firstDay: 1,
     editable: true,
@@ -44,6 +43,29 @@ document.addEventListener('DOMContentLoaded', function() {
     displayEventTime: true,
     displayEventEnd: true,
     disableDragging: true,
+    minTime:"08:00:00",
+    maxTime:"19:00:00",
+
+    header: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'resourceTimeGridDay,resourceTimeGridFiveDay'
+    },
+    
+    views: {
+      resourceTimeGridFiveDay: {
+        type: 'resourceTimeGrid',
+        duration: { days: 5 },
+        buttonText: '5 days'
+      }
+    },
+
+    resourceLabelText: 'Employés',
+
+    resources: [
+      { id: 'emp1', title: 'Jean Bombeur', eventColor: 'green' },
+      { id: 'emp2', title: 'Jean Talu', eventColor: 'orange' },
+    ],
 
     eventClick: function(e) {
       var eventClassNames = e.event.classNames[0];
@@ -86,12 +108,12 @@ document.addEventListener('DOMContentLoaded', function() {
       if(Cid == 'demandeConge'){
         start = arg.date;
         let eventsToRemove = thisDateHasEvent(start,start)
-        
+
         if(eventsToRemove.length > 0 && eventsToRemove[eventsToRemove.length -1] != true){
           $('#modalDemandeConge').modal({backdrop: 'static'});
           $('#modalDemandeConge').modal('show');
-          $('#dateDebut').val(arg["dateStr"]);
-          $('#dateFin').val(arg["dateStr"]);  
+          $('#dateDebut').val(arg["dateStr"].slice(0,10));
+          $('#dateFin').val(arg["dateStr"].slice(0,10));  
         }
         else{
           displayError();
@@ -188,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
       else{
         let oldEvent = e.oldEvent;
         let indexOfEvent = calendar.getEvents().findIndex(event => event._instance.instanceId === e.event._instance.instanceId)
-        console.log('test');
         if(e.event.end === null){
           let eventToReplace = constrainDrop(e.event.start,e.event.start);
           if(eventToReplace[0] != true){

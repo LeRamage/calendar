@@ -124,6 +124,7 @@ function thisDateHasEvent(start,end,isTrue = false){
             title: "Present(e)",
             start: date,
             allDay: true,
+            resourceIds: ['emp1','emp2'],
           }
         ]
         calendar.addEventSource(event)
@@ -135,7 +136,6 @@ function thisDateHasEvent(start,end,isTrue = false){
             title: "Weekend",
             start: date,
             allDay: true,
-            rendering:'background',
           }
         ]
         calendar.addEventSource(event)
@@ -171,6 +171,7 @@ function thisDateHasEvent(start,end,isTrue = false){
           start: startPresent,
           end: endPresent,
           extendedProps: {'ID':_ID},
+          resourceId: 'emp1',
         }
     }
     else if(moment(end).hour() == 12){
@@ -183,6 +184,7 @@ function thisDateHasEvent(start,end,isTrue = false){
           start: startPresent,
           end: endPresent,
           extendedProps: {'ID':_ID},
+          resourceId: 'emp1',
         }
     }
     calendar.addEvent(eventPresent);
