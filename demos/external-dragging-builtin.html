@@ -16,7 +16,12 @@
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
-<script src="js/script.js"></script>
+<script src='../packages/timeline/main.js'></script>
+<script src='../packages/resource-common/main.js'></script>
+<script src='../packages/resource-timeline/main.js'></script>
+<script src="js/calendar.js"></script>
+<script src="js/calendarFunctions.js"></script>
+<script src="js/formsFunctions.js"></script>
 </head>
 <body>
 
@@ -404,7 +409,7 @@
             </div>
   
             <div class="modal-footer">
-              <button type="button" class="btn btn-secondary" onclick="cancelDemandeConge($('#eventReceive').val())">Annuler</button>
+              <button type="button" class="btn btn-secondary" onclick="cancel($('#eventReceive').val())">Annuler</button>
               <button type="button" class="btn btn-primary" type="submit" onclick="confirm_form_Absence()">Valider</button>
             </div>
           </div>
