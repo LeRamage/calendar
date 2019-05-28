@@ -47,6 +47,8 @@
   <div id='eventClicked' style="display:none"></div>  
   <div id='eventReceive' style='display: none'></div>
   <div id='eventRightClicked' style="display: none"></div>
+  <div id="dropLocation" style="display: none"></div>
+  <div id="eventAtDropPlace" style="display: none"></div>
 
   <!-- -------- Evenements Exterieur ---------- -->
   <div id='external-events'>
@@ -122,7 +124,7 @@
                 l'heure de début ne peut être la même que celle de fin
               </div>
 
-              <div class="form-group row">
+              <!-- <div class="form-group row">
                 <div class="col-sm-6">
                   <div class="form-check form-check-inline">
                     <input class="form-check-input" type="checkbox" id="matinees" value="matinees" disabled>
@@ -135,7 +137,7 @@
                     <label class="form-check-label" for="apres-midis">Poser uniquement des après-midi</label>
                   </div>
                 </div>
-              </div>
+              </div> -->
               <!-- <div class="form-group row">
                 <label for="nbJours" class="col-sm-4">Nombre de jours</label>
                 <div class="col-sm-8">
@@ -454,6 +456,37 @@
       </div>
     </div>
 
+    <!-- -------- Modal 10 Go to Date ---------- -->
+    <div class="modal fade" id="goToDate" tabindex="-1" role="dialog" aria-labelledby="modalGoToDate" aria-hidden="true">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalGoToDate">A quelle date voulez-vous aller?</h5>
+            <button type="button" class="close" data-dismiss="modal">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body">
+            <!-- -------- Formulaire Go to Date ---------- -->
+            <form id='form-absence'>
+
+              <div class="form-group row">
+                <div class="col-sm-6">
+                    <label for="dateToMoove">Date</label>
+                    <input type="date" class="form-control" id="dateToMoove">
+                </div>
+              </div>
+
+            </form>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" type="submit" onclick="goToDate($('#dateToMoove').val())">Valider</button>
+          </div>
+        </div>
+      </div>
+    </div>  
+    
     <!-- -------- Calendrier ---------- -->
     <div id='calendar'></div>
 

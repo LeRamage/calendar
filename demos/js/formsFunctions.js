@@ -7,7 +7,7 @@ function confirm_form_Demandeconge(){
     let endHour = $('#heureFin').val();
     let event = calendar.getEvents()[calendar.getEvents().length - 1];
     let info = [];
-    let apremsIsChecked = false, matineesIsChecked = false;
+    // let apremsIsChecked = false, matineesIsChecked = false;
   
     if((start <= end) == false){
       $('.invalid').show()
@@ -34,12 +34,12 @@ function confirm_form_Demandeconge(){
       $('#heureFin').removeClass('not-valid');
   
       
-      if($('#matinees:checked').length > 0){
-        matineesIsChecked = true;
-      }
-      else if($('#apres-midis:checked').length > 0){
-        apremsIsChecked = true
-      }
+      // if($('#matinees:checked').length > 0){
+      //   matineesIsChecked = true;
+      // }
+      // else if($('#apres-midis:checked').length > 0){
+      //   apremsIsChecked = true
+      // }
   
       $('#matinees').prop( "checked", false );  
       $('#apres-midis').prop( "checked", false );
@@ -52,8 +52,8 @@ function confirm_form_Demandeconge(){
         info[info_id] = val;
       })
   
-      let eventsToRemove = thisDateHasEvent(start,end,true);
-      EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalDemandeConge',matineesIsChecked,apremsIsChecked);
+      let eventsToRemove = thisDateHasEvent(start,end,$('#dropLocation').val(),true);
+      EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalDemandeConge');
       
     } 
   }
@@ -125,22 +125,23 @@ function confirm_form_Demandeconge(){
         start:event.start,
         end:event.end,
         classNames:'conge',
-        extendedProps: {'ID':event.extendedProps.ID}
+        extendedProps: {'ID':event.extendedProps.ID},
+        resourceId:event.getResources()[0].id,
       }
-      let allEvents = calendar.getEvents().sort( (a,b) => moment(a.start).dayOfYear() - moment(b.start).dayOfYear());
-      let index = allEvents.findIndex(Event => moment(Event.start).isSame(moment(event.start),'day'))
+      // let allEvents = calendar.getEvents().sort( (a,b) => moment(a.start).dayOfYear() - moment(b.start).dayOfYear());
+      // let index = allEvents.findIndex(Event => moment(Event.start).isSame(moment(event.start),'day'))
   
-      if(allEvents[index + 2].classNames[0] == 'specialDemandeConge'){
-        let specialConge = {
-          title:"Congé",
-          start: allEvents[index + 2].start,
-          end: allEvents[index + 2].end,
-          classNames:'specialconge',
-          extendedProps: {'ID':event.extendedProps.ID}
-        }
-        allEvents[index + 2].remove();
-        calendar.addEvent(specialConge);
-      }
+      // if(allEvents[index + 2].classNames[0] == 'specialDemandeConge'){
+      //   let specialConge = {
+      //     title:"Congé",
+      //     start: allEvents[index + 2].start,
+      //     end: allEvents[index + 2].end,
+      //     classNames:'specialconge',
+      //     extendedProps: {'ID':event.extendedProps.ID}
+      //   }
+      //   allEvents[index + 2].remove();
+      //   calendar.addEvent(specialConge);
+      // }
   
       calendar.addEvent(newEvent);
       event.remove();

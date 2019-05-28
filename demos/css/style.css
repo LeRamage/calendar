@@ -106,9 +106,6 @@ body {
     color:#dc3545;
 }
 
-.fc-title, .fc-time{
-    display: block;
-}
 .fc-content{
     height: 100%;
 }

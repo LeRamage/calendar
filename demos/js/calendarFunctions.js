@@ -1,6 +1,6 @@
 /* --------- Check si un évenemment existe à/aux dates(s) du drop 
              Si celui-ci est de type présent ou weekend / ferié le drop est possible, sinon erreur --------- */
-function thisDateHasEvent(start,end,isTrue = false){
+function thisDateHasEvent(start,end,resourceId,isTrue = false){
     let hasNext = false;
     let allEvents = calendar.getEvents();
     if(isTrue)
@@ -9,25 +9,26 @@ function thisDateHasEvent(start,end,isTrue = false){
     let eventsToRemove = [];
   
     if(moment(start).isSame(moment(end),'day')){ // External Event = 1 journée
-      allEvents.some(function(event){
-        if(moment(event.start).isSame(moment(start),'day')){
-          if(event.classNames[0] == 'present')
-            eventsToRemove.push(event);
-          else
-            hasNext = true;
-        }       
+      let allEventsFilter = allEvents.filter(e => moment(e.start).isSame(moment(start),'day'))
+      allEventsFilter = allEventsFilter.filter(e=>e.getResources()[0].id == resourceId)
+      allEventsFilter.forEach(function(e){
+        if(e.classNames[0] == 'present'){
+            eventsToRemove.push(e); 
+        }  
+        else
+          hasNext = true;
       })
     }
   
     else{ // External Event = plrs journées
-      allEvents.some(function(event){ 
-        if(daysToCheck.find(date => moment(date).isSame(moment(event.start),'day'))){
-          if(event.classNames[0] == 'present' || event.classNames[0] == 'ferie_WE')
-            eventsToRemove.push(event);
-          else{
-            hasNext = true;
-          }        
-        }   
+      let allEventsFilter = allEvents.filter(e => daysToCheck.find(date => moment(date).isSame(moment(e.start),'day')))
+      allEventsFilter = allEventsFilter.filter(e=>e.getResources()[0].id == resourceId)
+      allEventsFilter.forEach(function(e){
+        if(e.classNames[0] == 'present'){
+            eventsToRemove.push(e); 
+        }  
+        else
+          hasNext = true;
       })
     }
     if(hasNext)
@@ -111,34 +112,41 @@ function thisDateHasEvent(start,end,isTrue = false){
   }
   
   
-  // --------- Ajout dynamique de l'évenement Présence + Weekend --------- //
-  function CreateEventPresence(){
+  // --------- Ajout dynamique de l'évenement Présence + Weekend --------- AJOUT DYNAMIQUE EN FONCTION DU NOMBRE D'EMPLOYES //
+  function CreateDefault(){
     let view = calendar.view;
-    let event = [];
+    let event
     let dates = createDateArray(view.activeStart, view.activeEnd)
+
     dates.forEach(function(date){
-      if(![0,6].includes(date.getDay())){
-        event = [
-          {
-            classNames: 'present',
-            title: "Present(e)",
-            start: date,
-            allDay: true,
-            resourceIds: ['emp1','emp2'],
-          }
-        ]
-        calendar.addEventSource(event)
+      if(![0,6].includes(date.getDay()) && calendar.getEvents().findIndex(e=>moment(e.start).isSame(moment(date),'day')) == -1){
+        calendar.getResources().forEach(r=>{
+          event = [
+            {
+              classNames: 'present',
+              title: "Present(e)",
+              start: date,
+              allDay: true,
+              resourceId: r.id,          
+            }   
+          ]
+          calendar.addEventSource(event)
+        })
       }
-      else{
-        event = [
-          {
-            classNames: 'ferie_WE',
-            title: "Weekend",
-            start: date,
-            allDay: true,
-          }
-        ]
-        calendar.addEventSource(event)
+      else if([0,6].includes(date.getDay()) && calendar.getEvents().findIndex(e=>moment(e.start).isSame(moment(date),'day')) == -1){
+        calendar.getResources().forEach(r=>{
+          event = [
+            {
+              classNames: 'ferie_WE',
+              title: "Weekend",
+              start: date,
+              allDay: true,
+              resourceId:r.id,
+              rendering:'background'
+            }
+          ]
+          calendar.addEventSource(event)
+        })
       }   
     })
   }
@@ -164,76 +172,90 @@ function thisDateHasEvent(start,end,isTrue = false){
     if(moment(start).hour() == 13){    
       startPresent.setHours(9,0,0,0)
       endPresent.setHours(12,0,0,0)
-      eventPresent = 
-        {
+      eventPresent = {
           classNames: 'specialPresent',
           title: "Present(e)",
           start: startPresent,
           end: endPresent,
           extendedProps: {'ID':_ID},
-          resourceId: 'emp1',
+          resourceId:event.getResources()[0].id,
         }
     }
     else if(moment(end).hour() == 12){
       startPresent.setHours(13,0,0,0);
       endPresent.setHours(18,0,0,0);
-      eventPresent = 
-        {
+      eventPresent = {
           classNames: 'specialPresent',
           title: "Present(e)",
           start: startPresent,
           end: endPresent,
           extendedProps: {'ID':_ID},
-          resourceId: 'emp1',
+          resourceId:event.getResources()[0].id,
         }
     }
     calendar.addEvent(eventPresent);
   }
   
-  function ifAllMorningOrAprem(start,end,matineesIsChecked,apremsIsChecked,event){
-    let _ID = event.extendedProps.ID;
-    let eventPresent;
-    let dates = createDateArray(start,end)
+  // function ifAllMorningOrAprem(start,end,matineesIsChecked,apremsIsChecked,event){
+  //   let _ID = event.extendedProps.ID;
+  //   let eventPresent,eventSplited;
+  //   let dates = createDateArray(start,end)
+  //   let _title = event.title
+  //   let _classNames = event.classNames[0]
+  //   let _resourceId = event.getResources()[0].id
   
-    if(matineesIsChecked){
-      dates.forEach(d => {
-        eventPresent = 
-        {
-          classNames: 'specialPresent',
-          title: "Present(e)",
-          start: d.setHours(13,0,0,0),
-          end: d.setHours(18,0,0,0),
-          extendedProps: {'ID':_ID},
-        }
-        calendar.addEvent(eventPresent)
-      })
-    }
-    else if(apremsIsChecked){
-      dates.forEach(d => {
-        eventPresent = 
-        {
-          classNames: 'specialPresent',
-          title: "Present(e)",
-          start: d.setHours(9,0,0,0),
-          end: d.setHours(12,0,0,0),
-          extendedProps: {'ID':_ID},
-        }
-        calendar.addEvent(eventPresent)
-      })
-    }
-    start = start.setHours(13,0,0,0)
-    end = end.setHours(18,0,0,0)
-    event.setDates(start,end)
-  }
+  //   if(matineesIsChecked){
+  //     event.remove();
+  //     dates.forEach(d => {
+  //       eventPresent = {
+  //         classNames: 'specialPresent',
+  //         title: "Present(e)",
+  //         start: d.setHours(13,0,0,0),
+  //         end: d.setHours(18,0,0,0),
+  //         extendedProps: {'ID':_ID},
+  //         resourceId:_resourceId,
+  //       }
+  //       eventSplited = {
+  //         classNames:_classNames,
+  //         title:_title,
+  //         extendedProps: {'ID':_ID},
+  //         resourceId:_resourceId,
+  //         start: d.setHours(9,0,0,0),
+  //         end: d.setHours(12,0,0,0),
+  //       }
+  //       calendar.addEvent(eventPresent);
+  //       calendar.addEvent(eventSplited);
+  //     })
+  //   }
+  //   else if(apremsIsChecked){
+  //     dates.forEach(d => {
+  //       eventPresent = {
+  //         classNames: 'specialPresent',
+  //         title: "Present(e)",
+  //         start: d.setHours(9,0,0,0),
+  //         end: d.setHours(12,0,0,0),
+  //         extendedProps: {'ID':_ID},
+  //         resourceId:_resourceId,
+  //       }
+  //       eventSplited = {
+  //         classNames:_classNames,
+  //         title:_title,
+  //         extendedProps: {'ID':_ID},
+  //         resourceId:_resourceId,
+  //         start: d.setHours(13,0,0,0),
+  //         end: d.setHours(18,0,0,0),
+  //       }
+  //       calendar.addEvent(eventPresent);
+  //       calendar.addEvent(eventSplited);
+  //     })
+  //   }
+  // }
   
   // --------- Ajout d'évenements present d'une demi journée ainsi que d'un demandeDeConge special --------- //
   function specialAddEventPresentIfMidDay(start,end,event){
     let _ID = event.extendedProps.ID;
-    let _classNames = event.classNames[0];
-    let title = event.title;
     let nbrOfDays = moment(end).dayOfYear() - moment(start).dayOfYear();
     let dtLeft = event.start
-    let dtRight = new Date(end);
     
     dtLeft = new Date(dtLeft.setDate(dtLeft.getDate() + nbrOfDays - 1));
     dtLeft.setHours(18,0,0,0);
@@ -244,31 +266,18 @@ function thisDateHasEvent(start,end,isTrue = false){
       start: new Date(start.setHours(9,0,0,0)),
       end: new Date(start.setHours(12,0,0,0)),
       extendedProps: {'ID':_ID},
+      resourceId:event.getResources()[0].id,
     }
-    eventSplitLeft = {
-      title:title,
-      start:start,
-      end:dtLeft,
-      classNames:_classNames,
-      extendedProps: {'ID':_ID},
-    }
-    eventSplitRight = {
-      start:new Date(end.setHours(9,0,0,0)),
-      end:dtRight,
-      classNames:'special'+_classNames,
-      extendedProps: {'ID':_ID},
-    }
+
     eventPresent2 = {
       classNames: 'specialPresent',
       title: "Present(e)",
       start: end.setHours(13,0,0,0),
       end: end.setHours(18,0,0,0),
       extendedProps: {'ID':_ID},
+      resourceId:event.getResources()[0].id,
     }
   
-    event.remove()
-    calendar.addEvent(eventSplitLeft);
-    calendar.addEvent(eventSplitRight);
     calendar.addEvent(eventPresent1);
     calendar.addEvent(eventPresent2);
   }
@@ -307,11 +316,11 @@ function thisDateHasEvent(start,end,isTrue = false){
       }
       else{
         setHoursOfEvent(startHour,endHour,start,end,event);
-        if(matineesIsChecked || apremsIsChecked){
-          setHoursOfEvent(startHour,endHour,start,end,event,matineesIsChecked,apremsIsChecked);
-          ifAllMorningOrAprem(event.start,event.end,matineesIsChecked,apremsIsChecked,event)
-        }
-        else if(startHour == 'Après-midi' && endHour == 'Après-midi'){
+        // if(matineesIsChecked || apremsIsChecked){
+        //   setHoursOfEvent(startHour,endHour,start,end,event,matineesIsChecked,apremsIsChecked);
+        //   ifAllMorningOrAprem(event.start,event.end,matineesIsChecked,apremsIsChecked,event)
+        // }
+        if(startHour == 'Après-midi' && endHour == 'Après-midi'){
           specialAddEventPresentIfMidDay(event.start,event.end,event);
         }
         else if(startHour == 'Après-midi'){
@@ -327,7 +336,7 @@ function thisDateHasEvent(start,end,isTrue = false){
     }  
   }
   
-  // --------- Supprimer un évènement autre que present --------- //
+  // --------- Supprimer un évènement (sauf évenement present) --------- //
   function deleteEvent(eventRightClicked){
     let _ID = eventRightClicked.extendedProps.ID;
     let dates;
@@ -349,56 +358,64 @@ function thisDateHasEvent(start,end,isTrue = false){
         title: "Present(e)",
         start: d,
         allDay: true,
-        resourceIds:['emp1','emp2']
+        resourceId: eventRightClicked.getResources()[0].id,
       };
-      calendar.addEvent(event);
+      calendar.addEvent(event)
     }) 
   
     $('#modalDelete').modal('hide');
   }
+
+
   
   // --------- Gestions des congé de plusieurs jours uniquement l'après-midi ou uniquement le matin --------- //
-  $(document).ready(function(){
-    $('#dateDebut').change(function(){
-      let dd = moment($('#dateDebut').val());
-      let df = moment($('#dateFin').val());
-      if(dd.isBefore(df)){
-        $('#matinees').attr("disabled", false);
-        $('#apres-midis').attr("disabled",false);
-      }
-      else if(dd.isSame(df)){
-        $('#matinees').attr("disabled", true);
-        $('#apres-midis').attr("disabled",true);
-      }
-      else if(dd.isAfter(df)){
-        $('#matinees').attr("disabled", true);
-        $('#apres-midis').attr("disabled",true);
-      }
-    })
+  // $(document).ready(function(){
+  //   $('#dateDebut').change(function(){
+  //     let dd = moment($('#dateDebut').val());
+  //     let df = moment($('#dateFin').val());
+  //     if(dd.isBefore(df)){
+  //       $('#matinees').attr("disabled", false);
+  //       $('#apres-midis').attr("disabled",false);
+  //     }
+  //     else if(dd.isSame(df)){
+  //       $('#matinees').attr("disabled", true);
+  //       $('#apres-midis').attr("disabled",true);
+  //     }
+  //     else if(dd.isAfter(df)){
+  //       $('#matinees').attr("disabled", true);
+  //       $('#apres-midis').attr("disabled",true);
+  //     }
+  //   })
   
-    $('#dateFin').change(function(){
-      let dd = moment($('#dateDebut').val());
-      let df = moment($('#dateFin').val());
-      if(dd.isBefore(df)){
-        $('#matinees').attr("disabled", false);
-        $('#apres-midis').attr("disabled",false);
-      }
-      else if(dd.isSame(df)){
-        $('#matinees').attr("disabled", true);
-        $('#apres-midis').attr("disabled",true);
-      }
-      else if(dd.isAfter(df)){
-        $('#matinees').attr("disabled", true);
-        $('#apres-midis').removeAttribute("disabled",true);
-      }
-    })
+  //   $('#dateFin').change(function(){
+  //     let dd = moment($('#dateDebut').val());
+  //     let df = moment($('#dateFin').val());
+  //     if(dd.isBefore(df)){
+  //       $('#matinees').attr("disabled", false);
+  //       $('#apres-midis').attr("disabled",false);
+  //     }
+  //     else if(dd.isSame(df)){
+  //       $('#matinees').attr("disabled", true);
+  //       $('#apres-midis').attr("disabled",true);
+  //     }
+  //     else if(dd.isAfter(df)){
+  //       $('#matinees').attr("disabled", true);
+  //       $('#apres-midis').removeAttribute("disabled",true);
+  //     }
+  //   })
   
-    $('#matinees').change(function(){
-      $('#apres-midis').prop( "checked", false );   
-    })
+  //   $('#matinees').change(function(){
+  //     $('#apres-midis').prop( "checked", false );   
+  //   })
   
-    $('#apres-midis').change(function(){
-      $('#matinees').prop( "checked", false );
-    })
+  //   $('#apres-midis').change(function(){
+  //     $('#matinees').prop( "checked", false );
+  //   })
   
-  })
+  // })
+
+  function goToDate(date){
+    dt = new Date(date)
+    calendar.gotoDate(dt)
+    $('#goToDate').modal('hide')
+  }
