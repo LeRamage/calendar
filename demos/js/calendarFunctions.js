@@ -349,6 +349,7 @@ function thisDateHasEvent(start,end,isTrue = false){
         title: "Present(e)",
         start: d,
         allDay: true,
+        resourceIds:['emp1','emp2']
       };
       calendar.addEvent(event);
     }) 

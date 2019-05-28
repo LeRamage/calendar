@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
     displayEventEnd: true,
     disableDragging: true,
     minTime:"08:00:00",
-    maxTime:"19:00:00",
+    // maxTime:"19:00:00",
 
     header: {
       left: 'prev,next today',
@@ -169,37 +169,36 @@ document.addEventListener('DOMContentLoaded', function() {
       }
 
       // Changer le Titre lorsque l'événement s'étale sur plusieurs jours
-      if(event.event.classNames =='demandeConge' || event.event.classNames == 'conge'){
-        let nbrOfEventsSharingSameID = calendar.getEvents().filter(e=> e.extendedProps.ID == event.event.extendedProps.ID)
-        if(moment(event.event.start).isBefore(moment(event.event.end),'day')){
-          let nbrOfDays =  moment(event.event.end).dayOfYear() - moment(event.event.start).dayOfYear()
-          let str = '';  
-          console.log('nbr : '+nbrOfEventsSharingSameID.length)
-          if(nbrOfEventsSharingSameID.length > 4){
-            str = ((nbrOfDays+1)/2).toString()+' jours'
-            element[0].children[0].children[0].innerText = str
-          }
-          else if(nbrOfEventsSharingSameID.length == 4){
-            let nxtIsSpecial = calendar.getEvents().findIndex(e => moment(e.start).isSame(moment(event.event.start)),'day') +1;
-            if(calendar.getEvents()[nxtIsSpecial].classNames[0] === 'specialdemandeConge'){
-              str = (nbrOfDays+1).toString()+' jours'
-              element[0].children[0].children[0].innerText = str 
-            }
-            else{
-              str = ((nbrOfDays+1)/2).toString()+' jours'
-              element[0].children[0].children[0].innerText = str
-            }
-          }
-          else if(nbrOfEventsSharingSameID.length == 3){
-            str = '1 jour'
-            element[0].children[0].children[0].innerText = str
-          }
-          else if(nbrOfEventsSharingSameID.length == 2){
-            str = (nbrOfDays + 1 - 1/2).toString()+' jours'
-              element[0].children[0].children[0].innerText = str
-          }
-        }
-      }
+    //   if(event.event.classNames =='demandeConge' || event.event.classNames == 'conge'){
+    //     let nbrOfEventsSharingSameID = calendar.getEvents().filter(e=> e.extendedProps.ID == event.event.extendedProps.ID)
+    //     if(moment(event.event.start).isBefore(moment(event.event.end),'day')){
+    //       let nbrOfDays =  moment(event.event.end).dayOfYear() - moment(event.event.start).dayOfYear()
+    //       let str = '';  
+    //       if(nbrOfEventsSharingSameID.length > 4){
+    //         str = ((nbrOfDays+1)/2).toString()+' jours'
+    //         element[0].children[0].children[0].innerText = str
+    //       }
+    //       else if(nbrOfEventsSharingSameID.length == 4){
+    //         let nxtIsSpecial = calendar.getEvents().findIndex(e => moment(e.start).isSame(moment(event.event.start)),'day') +1;
+    //         if(calendar.getEvents()[nxtIsSpecial].classNames[0] === 'specialdemandeConge'){
+    //           str = (nbrOfDays+1).toString()+' jours'
+    //           element[0].children[0].children[0].innerText = str 
+    //         }
+    //         else{
+    //           str = ((nbrOfDays+1)/2).toString()+' jours'
+    //           element[0].children[0].children[0].innerText = str
+    //         }
+    //       }
+    //       else if(nbrOfEventsSharingSameID.length == 3){
+    //         str = '1 jour'
+    //         element[0].children[0].children[0].innerText = str
+    //       }
+    //       else if(nbrOfEventsSharingSameID.length == 2){
+    //         str = (nbrOfDays + 1 - 1/2).toString()+' jours'
+    //           element[0].children[0].children[0].innerText = str
+    //       }
+    //     }
+    //   }
     },
 
     eventDrop: function(e){

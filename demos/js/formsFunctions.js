@@ -6,7 +6,6 @@ function confirm_form_Demandeconge(){
     let startHour = $('#heureDebut').val();
     let endHour = $('#heureFin').val();
     let event = calendar.getEvents()[calendar.getEvents().length - 1];
-    console.log(event.getResources())
     let info = [];
     let apremsIsChecked = false, matineesIsChecked = false;
   
@@ -121,7 +120,6 @@ function confirm_form_Demandeconge(){
   
   // --------- Validation d'une Demande Congé --------- //
   function validation_demande_conge(event){
-      console.log(event)
       let newEvent = {
         title:"Congé",
         start:event.start,
