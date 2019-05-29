@@ -141,13 +141,13 @@ body {
 
 .test{
     right: unset !important;
-    width: 40px !important;
+    width: 20px !important;
     height: 20px !important;
 }
 
 .testino{
     left: unset !important;
-    width: 40px !important;
+    width: 20px !important;
     height: 20px !important;
 }
 

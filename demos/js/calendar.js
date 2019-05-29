@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
     displayEventEnd: false,
     disableDragging: true,
     //minTime:"08:00:00",
-    slotWidth:'80',
+    slotWidth:'40',
     // maxTime:"19:00:00",
     
     // events:[
