@@ -7,7 +7,6 @@ function confirm_form_Demandeconge(){
     let endHour = $('#heureFin').val();
     let event = calendar.getEvents()[calendar.getEvents().length - 1];
     let info = [];
-    // let apremsIsChecked = false, matineesIsChecked = false;
   
     if((start <= end) == false){
       $('.invalid').show()
@@ -33,19 +32,6 @@ function confirm_form_Demandeconge(){
       $('#heureDebut').removeClass('not-valid');
       $('#heureFin').removeClass('not-valid');
   
-      
-      // if($('#matinees:checked').length > 0){
-      //   matineesIsChecked = true;
-      // }
-      // else if($('#apres-midis:checked').length > 0){
-      //   apremsIsChecked = true
-      // }
-  
-      $('#matinees').prop( "checked", false );  
-      $('#apres-midis').prop( "checked", false );
-      $('#matinees').attr("disabled", true);
-      $('#apres-midis').attr("disabled",true);  
-  
       $("form#form-demandeConge :input").each(function(){
         let info_id = 'V'+$(this)[0].id;
         let val = $(this).val() ;
@@ -63,7 +49,9 @@ function confirm_form_Demandeconge(){
     let start = new Date($('#CdateDebut').val());
     let end = new Date($('#CdateFin').val());
     let startHour = $('#CheureDebut').val();
-    let endHour = $('#CheureFin').val();
+    let endHour = $('#CheureFin').val();   
+    let event = calendar.getEvents()[calendar.getEvents().length - 1];
+    let info = []
   
     if((start <= end) == false){
       $('.invalid').show()
@@ -88,16 +76,14 @@ function confirm_form_Demandeconge(){
       $('.isTheSame').hide();
       $('#CheureDebut').removeClass('not-valid');
       $('#CheureFin').removeClass('not-valid');
-  
-      let event = calendar.getEvents()[calendar.getEvents().length - 1];
-      let info = []
+
       $("form#form-Conge :input").each(function(){
-        let info_id = 'V'+$(this)[0].id;
+        let info_id = 'V'+$(this)[0].id.slice(1);
         let val = $(this).val() ;
         info[info_id] = val;
       })
-  
-      let eventsToRemove = thisDateHasEvent(start,end,true);
+      console.log(info)
+      let eventsToRemove = thisDateHasEvent(start,end,$('#dropLocation').val(),true);
       EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalConge')
     } 
   }
@@ -128,20 +114,6 @@ function confirm_form_Demandeconge(){
         extendedProps: {'ID':event.extendedProps.ID},
         resourceId:event.getResources()[0].id,
       }
-      // let allEvents = calendar.getEvents().sort( (a,b) => moment(a.start).dayOfYear() - moment(b.start).dayOfYear());
-      // let index = allEvents.findIndex(Event => moment(Event.start).isSame(moment(event.start),'day'))
-  
-      // if(allEvents[index + 2].classNames[0] == 'specialDemandeConge'){
-      //   let specialConge = {
-      //     title:"Congé",
-      //     start: allEvents[index + 2].start,
-      //     end: allEvents[index + 2].end,
-      //     classNames:'specialconge',
-      //     extendedProps: {'ID':event.extendedProps.ID}
-      //   }
-      //   allEvents[index + 2].remove();
-      //   calendar.addEvent(specialConge);
-      // }
   
       calendar.addEvent(newEvent);
       event.remove();

@@ -3,7 +3,7 @@ var demandeCongesInfo = [];
 
 document.addEventListener('DOMContentLoaded', function() {
     var Calendar = FullCalendar.Calendar;
-    var Draggable = FullCalendarInteraction.Draggable
+    var Draggable = FullCalendarInteraction.Draggable;
 
     /* initialize the external events
     -----------------------------------------------------------------*/
@@ -30,22 +30,39 @@ document.addEventListener('DOMContentLoaded', function() {
     var calendarEl = document.getElementById('calendar');
 
     calendar = new Calendar(calendarEl, {
-    plugins: [ 'resourceTimeGrid','interaction'],
-
-    defaultView: 'resourceTimeGridWeek',
-    datesAboveResources: true,
+    plugins: [ 'resourceTimeline','interaction'],
     
+    height: 250,
+    defaultView: 'customWeek',
+    datesAboveResources: true,
+    firstDay:1,
     timezone : 'local',
     locale: 'fr',
-    firstDay: 1,
-    hiddenDays:[0,6],
     editable: true,
     droppable: true, 
-    displayEventTime: true,
-    displayEventEnd: true,
+    displayEventTime: false,
+    displayEventEnd: false,
     disableDragging: true,
-    minTime:"08:00:00",
+    //minTime:"08:00:00",
+    slotWidth:'80',
     // maxTime:"19:00:00",
+    
+    // events:[
+    //   {
+    //     title: 'test',
+    //     start: new Date('2019-05-01').setHours(9,0,0,0),
+    //     end:new Date('2019-05-01').setHours(12,0,0,0),
+    //     resourceId:'emp1',
+    //     classNames:'test',
+    //   },
+    //   {
+    //     title: 'testino',
+    //     start: new Date('2019-05-01').setHours(13,0,0,0),
+    //     end:new Date('2019-05-01').setHours(18,0,0,0),
+    //     resourceId:'emp1',
+    //     classNames:'testino',
+    //   }
+    // ],
 
     customButtons: {
       myCustomButton: {
@@ -56,19 +73,21 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     },
 
+    views: {
+      customWeek:{
+        type:'resourceTimeline',
+        duration:{ months: 1 },
+        slotDuration: { days:1 },
+        //dateAlignment: 'week',
+        buttonText: 'Month',
+      }
+    },
+
     header: {
       left: 'prev,next today, myCustomButton',
       center: 'title',
-      right: 'resourceTimeGridDay,resourceTimeGridWeek'
+      right: 'resourceTimeGridDay,customWeek'
     },
-    
-    // views: {
-    //   resourceTimeGridFiveDays: {
-    //     type: 'resourceTimeGrid',
-    //     duration: { days: 5 },
-    //     buttonText: '5 days',
-    //   }
-    // },
 
     resourceLabelText: 'Employés',
 
@@ -114,7 +133,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     drop: function(arg) {  
       let Cid = arg.draggedEl.id;
-      if(Cid == 'demandeConge'){        
+      
+      if(Cid == 'demandeConge'){ 
         $('#modalDemandeConge').modal({backdrop: 'static'});
         $('#modalDemandeConge').modal('show');
         $('#dateDebut').val(arg["dateStr"].slice(0,10));
@@ -124,8 +144,8 @@ document.addEventListener('DOMContentLoaded', function() {
       else if(Cid == 'conge'){
         $('#modalConge').modal({backdrop: 'static'});
         $('#modalConge').modal('show');
-        $('#CdateDebut').val(arg["dateStr"]);
-        $('#CdateFin').val(arg["dateStr"]);
+        $('#CdateDebut').val(arg["dateStr"].slice(0,10));
+        $('#CdateFin').val(arg["dateStr"].slice(0,10));
       }
 
       else{
@@ -136,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     },
     
-    eventRender: function(event) {        
+    eventRender: function(event) {   
       let element = $(event.el);
       element.css('border','none');
       
@@ -155,6 +175,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if(e.event.getResources()[0].id != e.oldEvent.getResources()[0].id){
         e.revert()
       }
+      else if(e.event.classNames[0] == 'demandeConge' || e.event.classNames[0] == 'conge' || e.event.classNames[0] == 'congeDeny'){
+        e.revert()
+      }
       else{
         let eventAtDropPlace = calendar.getEvents().filter(event  => moment(event.start).isSame(moment(e.event.start),'day'))
         eventAtDropPlace.splice(eventAtDropPlace.length - 1)
@@ -166,37 +189,8 @@ document.addEventListener('DOMContentLoaded', function() {
     },
     
     eventResize: function(e){
-      console.log('coucou')
+      console.log('coucou');
     },
-    // eventResize: function(e){
-    //   if(e.endDelta.days > 0){
-    //     let eventsToRemove = constrainResize(e.endDelta.days,e.event.start);
-    //     if(eventsToRemove[eventsToRemove.length - 1] != true){
-    //       eventsToRemove.forEach(event => event.remove())
-    //     }
-    //     else{
-    //       setTimeout(function(){
-    //         e.event.remove();
-    //         calendar.addEvent(e.prevEvent);
-    //       },10);
-    //     }
-    //   }
-
-    //   else if(e.endDelta.days < 0){
-    //     let event= []
-    //     for(i = 1; i <= Math.abs(e.endDelta.days); i++){
-    //       event = [
-    //         {
-    //           classNames: 'present',
-    //           title: "Present(e)",
-    //           start: moment(e.prevEvent.end).subtract(i, "days")._d,
-    //           allDay: true,
-    //         }
-    //       ]
-    //       calendar.addEventSource(event)
-    //     }
-    //   }
-    // },
 
     eventAllow: function(dropLocation, draggedEvent){
       events = calendar.getEvents().filter( e => moment(e.start).isSame(moment(dropLocation.start),'day'))
@@ -208,7 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
       else{
         return false;
       }     
-    }
+    },
 
   });
   calendar.render();
