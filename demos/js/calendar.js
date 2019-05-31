@@ -1,5 +1,6 @@
 var calendar ;
 var demandeCongesInfo = [];
+var width_event;
 
 document.addEventListener('DOMContentLoaded', function() {
     var Calendar = FullCalendar.Calendar;
@@ -19,7 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
           title: eventEl.innerText.trim(),
           classNames:_id,
           id:_id,
-          resourceId:'emp1'
         }
       });
     });
@@ -32,10 +32,8 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar = new Calendar(calendarEl, {
     plugins: [ 'resourceTimeline','interaction'],
     
-    height: 250,
     defaultView: 'customWeek',
     datesAboveResources: true,
-    firstDay:1,
     timezone : 'local',
     locale: 'fr',
     editable: true,
@@ -43,30 +41,12 @@ document.addEventListener('DOMContentLoaded', function() {
     displayEventTime: false,
     displayEventEnd: false,
     disableDragging: true,
-    //minTime:"08:00:00",
-    slotWidth:'40',
-    // maxTime:"19:00:00",
-    
-    // events:[
-    //   {
-    //     title: 'test',
-    //     start: new Date('2019-05-01').setHours(9,0,0,0),
-    //     end:new Date('2019-05-01').setHours(12,0,0,0),
-    //     resourceId:'emp1',
-    //     classNames:'test',
-    //   },
-    //   {
-    //     title: 'testino',
-    //     start: new Date('2019-05-01').setHours(13,0,0,0),
-    //     end:new Date('2019-05-01').setHours(18,0,0,0),
-    //     resourceId:'emp1',
-    //     classNames:'testino',
-    //   }
-    // ],
+    contentHeight: 'auto',
+    resourceAreaWidth: '10%',
 
     customButtons: {
       myCustomButton: {
-        text: 'custom!',
+        text: 'go to date',
         click: function() {
           $('#goToDate').modal('show');
         }
@@ -78,8 +58,7 @@ document.addEventListener('DOMContentLoaded', function() {
         type:'resourceTimeline',
         duration:{ months: 1 },
         slotDuration: { days:1 },
-        //dateAlignment: 'week',
-        buttonText: 'Month',
+        buttonText: 'month',
       }
     },
 
@@ -89,11 +68,14 @@ document.addEventListener('DOMContentLoaded', function() {
       right: 'resourceTimeGridDay,customWeek'
     },
 
-    resourceLabelText: 'Employés',
-
+    resourceLabelText: 'Ressources',
+    resourceGroupField: 'type',
     resources: [
-      { id: 'emp1', title: 'Jean Bombeur', eventColor: 'green' },
-      { id: 'emp2', title: 'Jean Talu', eventColor: 'orange' },
+      { id: 'emp1', type: 'Employés',title: 'Jean Bombeur' },
+      { id: 'emp2', type: 'Employés',title: 'Jean Talu' },
+      { id: 'emp3', type: 'Employés',title: 'Bowie Ken' },
+      { id: 'emp4', type: 'Employés',title: 'Alain Dii' },
+      { id: 'recap-present', type:'Récapitulatif', title: 'Total Présences'},
     ],
 
     eventClick: function(e) {
@@ -159,15 +141,21 @@ document.addEventListener('DOMContentLoaded', function() {
     eventRender: function(event) {   
       let element = $(event.el);
       element.css('border','none');
+      element.css('height','20px');
       
       // ajoute un listener pour le click droit sur certains évenements
       if(event.event.classNames[0] != 'present' && event.event.classNames[0] != 'ferie_WE' && event.event.classNames[0] != 'specialPresent'){
-        element[0].children[0].addEventListener('contextmenu', function(ev){
+        element[0].addEventListener('contextmenu', function(ev){
           ev.preventDefault();
           $('#eventRightClicked').val(event.event)
           $('#modalDelete').modal('show');
           return false;
         }, false);
+      }
+
+      if(event.event.classNames[0] == 'specialPresent'){
+        console.log('width_event : '+width_event)
+        element.css('width',width_event / 2)
       }
     },
 
@@ -206,13 +194,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
   });
   calendar.render();
-  CreateDefault();
-  $('.fc-next-button').click(function(){
-    CreateDefault();
-  })
-  $('.fc-prev-button').click(function(){
-    CreateDefault();
-  })
+  createDefault();
+  addRecapInBackground();
+  width_event = getWidthOfEvent();
+  // $('.fc-next-button').click(function(){
+  //   createDefault();
+  // })
 });
 
 

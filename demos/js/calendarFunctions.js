@@ -12,9 +12,9 @@ function thisDateHasEvent(start,end,resourceId,isTrue = false){
     let allEventsFilter = allEvents.filter(e => moment(e.start).isSame(moment(start),'day'))
     allEventsFilter = allEventsFilter.filter(e=>e.getResources()[0].id == resourceId)
     allEventsFilter.forEach(function(e){
-      if(e.classNames[0] == 'present'){
+      if(e.classNames[0] == 'present' || e.classNames[0] == 'ferie_WE' ){
           eventsToRemove.push(e); 
-      }  
+      } 
       else
         hasNext = true;
     })
@@ -24,7 +24,7 @@ function thisDateHasEvent(start,end,resourceId,isTrue = false){
     let allEventsFilter = allEvents.filter(e => daysToCheck.find(date => moment(date).isSame(moment(e.start),'day')))
     allEventsFilter = allEventsFilter.filter(e=>e.getResources()[0].id == resourceId)
     allEventsFilter.forEach(function(e){
-      if(e.classNames[0] == 'present'){
+      if(e.classNames[0] == 'present' || e.classNames[0] == 'ferie_WE' ){
           eventsToRemove.push(e); 
       }  
       else
@@ -113,39 +113,43 @@ function createDateArray(start,end){
 
 
 // --------- Ajout dynamique de l'évenement Présence + Weekend --------- AJOUT DYNAMIQUE EN FONCTION DU NOMBRE D'EMPLOYES //
-function CreateDefault(){
+function createDefault(){
   let view = calendar.view;
-  let event
-  let dates = createDateArray(view.activeStart, view.activeEnd)
-
+  let event;
+  let dates = createDateArray(view.activeStart, view.activeEnd);
+  
   dates.forEach(function(date){
     if(![0,6].includes(date.getDay()) && calendar.getEvents().findIndex(e=>moment(e.start).isSame(moment(date),'day')) == -1){
       calendar.getResources().forEach(r=>{
-        event = [
-          {
-            classNames: ['present','pres'],
-            title: "Present(e)",
-            start: date,
-            allDay: true,
-            resourceId: r.id,          
-          }   
-        ]
-        calendar.addEventSource(event)
+        if(r.id.includes('emp')){
+          event = [
+            {
+              classNames: ['present','pres'],
+              title: "Present(e)",
+              start: date,
+              allDay: true,
+              resourceId: r.id,          
+            }   
+          ]
+          calendar.addEventSource(event)
+        }
       })
     }
     else if([0,6].includes(date.getDay()) && calendar.getEvents().findIndex(e=>moment(e.start).isSame(moment(date),'day')) == -1){
       calendar.getResources().forEach(r=>{
-        event = [
-          {
-            classNames: 'ferie_WE',
-            title: "Weekend",
-            start: date,
-            allDay: true,
-            resourceId:r.id,
-            rendering:'background'
-          }
-        ]
-        calendar.addEventSource(event)
+        if(r.id.includes('emp')){
+          event = [
+            {
+              classNames: 'ferie_WE',
+              title: "Weekend",
+              start: date,
+              allDay: true,
+              resourceId:r.id,
+              rendering:'background'
+            }
+          ]
+          calendar.addEventSource(event)
+        }
       })
     }   
   })
@@ -165,77 +169,54 @@ function displayError(){
 
 // --------- Ajout d'un évenement present qui prend une demi journée --------- //
 function addEventPresentIfMidDay(start,end,event){
+  
   let _ID = event.extendedProps.ID;
   let eventPresent;
   let startPresent = start
   let endPresent = end
+  
   if(moment(start).hour() == 13){    
     startPresent.setHours(9,0,0,0)
     endPresent.setHours(12,0,0,0)
     eventPresent = {
-        classNames: ['specialPresent','test'],
+        classNames: ['specialPresent','split-right'],
         title: "Present(e)",
         start: startPresent,
         end: endPresent,
         extendedProps: {'ID':_ID},
         resourceId:event.getResources()[0].id,
     }
-    event.setProp('classNames',['demandeConge','testino'])
   }
   else if(moment(end).hour() == 12){
     startPresent.setHours(13,0,0,0);
     endPresent.setHours(18,0,0,0);
     eventPresent = {
-        classNames: ['specialPresent','testino'],
+        classNames: ['specialPresent','split-left'],
         title: "Present(e)",
         start: startPresent,
         end: endPresent,
         extendedProps: {'ID':_ID},
         resourceId:event.getResources()[0].id,
     }
-    event.setProp('classNames',['demandeConge','test'])
   }
-  console.log(event.classNames)
   calendar.addEvent(eventPresent);
 }
 
 // --------- Ajout d'évenements present d'une demi journée ainsi que d'un demandeDeConge special --------- //
 function addSpecialEventPresentIfMidDay(start,end,event){
   let _ID = event.extendedProps.ID;
-  let nbrOfDays = moment(end).dayOfYear() - moment(start).dayOfYear();
-  let dtLeft = event.start;
-  let _classNames = event.classNames[0];
-  let title = event.title;
-  let dtRight = new Date(end);
-
-  dtLeft = new Date(dtLeft.setDate(dtLeft.getDate() + nbrOfDays - 1));
-  dtLeft.setHours(18,0,0,0);
 
   eventPresent1 = {
-    classNames: 'specialPresent',
+    classNames: ['specialPresent','split-right'],
     title: "Present(e)",
     start: new Date(start.setHours(9,0,0,0)),
     end: new Date(start.setHours(12,0,0,0)),
     extendedProps: {'ID':_ID},
     resourceId:event.getResources()[0].id,
   }
-  eventSplitLeft = {
-    title:title,
-    start:start,
-    end:dtLeft,
-    classNames:_classNames,
-    extendedProps: {'ID':_ID},
-    resourceId:event.getResources()[0].id,
-  }
-  eventSplitRight = {
-    start:new Date(end.setHours(9,0,0,0)),
-    end:dtRight,
-    classNames:'special'+_classNames,
-    extendedProps: {'ID':_ID},
-    resourceId:event.getResources()[0].id,
-  }
+
   eventPresent2 = {
-    classNames: 'specialPresent',
+    classNames: ['specialPresent','split-left'],
     title: "Present(e)",
     start: end.setHours(13,0,0,0),
     end: end.setHours(18,0,0,0),
@@ -243,9 +224,6 @@ function addSpecialEventPresentIfMidDay(start,end,event){
     resourceId:event.getResources()[0].id,
   }
 
-  event.remove();
-  calendar.addEvent(eventSplitLeft);
-  calendar.addEvent(eventSplitRight);
   calendar.addEvent(eventPresent1);
   calendar.addEvent(eventPresent2);
 }
@@ -304,16 +282,24 @@ function EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,m
 function deleteEvent(eventRightClicked){
   let _ID = eventRightClicked.extendedProps.ID;
   let dates;
-  if(eventRightClicked.classNames!='demandeConge' && eventRightClicked.classNames!='conge')
-    eventRightClicked.setEnd(eventRightClicked.end.setDate(eventRightClicked.end.getDate()-1))
-  let eventsToRemove = calendar.getEvents().filter(e => e.extendedProps.ID == _ID);
-
-  if(eventsToRemove.length == 2 && eventsToRemove[0].classNames[0] == 'demandeConge')
-    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end);
-  else if (eventsToRemove.length == 1 && !moment(eventsToRemove[0].start).isSame(moment(eventsToRemove[0].end),'day'))
-    dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end);
-  else
+  let eventsToRemove
+  if(eventRightClicked.classNames!='demandeConge' && eventRightClicked.classNames!='conge'){
+    eventsToRemove = calendar.getEvents().filter(e => moment(e.start).isSame(moment(eventRightClicked.start),'day'));
+    eventsToRemove = eventsToRemove.filter(e => e.getResources()[0].id == eventRightClicked.getResources()[0].id);
     dates = createDateArray(eventsToRemove[0].start,eventsToRemove[eventsToRemove.length -1].start);
+  }
+  else{
+    eventsToRemove = calendar.getEvents().filter(e => e.extendedProps.ID == _ID);
+
+    if(eventsToRemove.length == 2 && eventsToRemove[0].classNames[0] == 'demandeConge')
+      dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end);
+    else if(eventsToRemove.length == 2 && eventsToRemove[0].classNames[0] == 'conge')
+      dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end);
+    else if (eventsToRemove.length == 1 && !moment(eventsToRemove[0].start).isSame(moment(eventsToRemove[0].end),'day'))
+      dates = createDateArray(eventsToRemove[0].start,eventsToRemove[0].end);
+    else
+      dates = createDateArray(eventsToRemove[0].start,eventsToRemove[eventsToRemove.length -1].start);
+  }
 
   eventsToRemove.forEach(e => e.remove())
   dates.forEach(d => {
@@ -330,10 +316,29 @@ function deleteEvent(eventRightClicked){
   $('#modalDelete').modal('hide');
 }
 
-
-
 function goToDate(date){
   dt = new Date(date)
   calendar.gotoDate(dt)
   $('#goToDate').modal('hide')
+}
+
+function getWidthOfEvent(){
+  return width_event = $('.present').width();
+}
+
+function addRecapInBackground(){
+  let view = calendar.view;
+  let event;
+  let dates = createDateArray(view.activeStart, view.activeEnd);
+
+  dates.forEach(function(date){
+    event = [
+      {
+        classNames:'test',
+        start: date,
+        resourceId: 'recap-present',
+      }
+    ]
+    calendar.addEventSource(event);
+  })
 }

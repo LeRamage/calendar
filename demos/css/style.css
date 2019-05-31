@@ -10,8 +10,7 @@ body {
 }
 
 #wrap {
-    width: 1100px;
-    margin: 0 auto;
+    margin: 0 1%;
 }
 
 #external-events{
@@ -108,13 +107,6 @@ body {
     width: 100%;
 }
 
-/* .fc-content{
-    text-align: center !important; 
-    display: inline-block !important; 
-    height: 100%; 
-    width: 100%; 
-} */
-
 .not-valid{
     border:#dc3545 solid 1px !important;
 }
@@ -127,34 +119,26 @@ body {
     display: block !important;
 } 
 
-/* .fc-h-event{
-    width: 50%
-} */
-
-/* .fc-time,.fc-title,.fc-content{
-    width: 50%;
-} */
-
 .fc-timeline-event{
     top: unset !important;
 }
 
-.test{
+.split-right{
     right: unset !important;
-    width: 20px !important;
-    height: 20px !important;
 }
 
-.testino{
+.split-left{
     left: unset !important;
-    width: 20px !important;
-    height: 20px !important;
 }
 
-.fc-time,.fc-title{
+.fc-title{
     display: none !important;
 }
 
-.pres{
-    height:20px !important;
+.fc-cell-text{
+    font-size: 0.7em;
+}
+
+.test{
+    background-color: transparent !important;
 }

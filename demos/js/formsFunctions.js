@@ -82,7 +82,6 @@ function confirm_form_Demandeconge(){
         let val = $(this).val() ;
         info[info_id] = val;
       })
-      console.log(info)
       let eventsToRemove = thisDateHasEvent(start,end,$('#dropLocation').val(),true);
       EventsManagment(eventsToRemove,info,startHour,endHour,start,end,event,'#modalConge')
     } 
